@@ -4,6 +4,7 @@
 
 import { markdown } from '@codemirror/lang-markdown';
 import { languages } from '@codemirror/language-data';
+import { GFM } from '@lezer/markdown';
 import { 
   indentOnInput,
   bracketMatching,
@@ -16,13 +17,16 @@ import { defaultKeymap, history, historyKeymap, indentWithTab } from '@codemirro
 import { closeBrackets, closeBracketsKeymap, autocompletion } from '@codemirror/autocomplete';
 import { searchKeymap, highlightSelectionMatches } from '@codemirror/search';
 import { slashCommandCompletion, slashCommandKeymap, commandPaletteThemes } from './commands';
-import { syntaxHiding } from './syntaxHiding';
+import { hideMarksExtension, stylingExtension } from './styling';
 
 /**
  * Create Markdown language support
  */
 export function createMarkdownLanguage(): Extension {
-  return markdown({ codeLanguages: languages });
+  return markdown({ 
+    codeLanguages: languages,
+    extensions: [GFM]
+  });
 }
 
 /**
@@ -95,6 +99,7 @@ export function createMarkdownExtensions(): Extension[] {
     createAutocompletion(),
     slashCommandKeymap(),
     ...commandPaletteThemes(),
-    syntaxHiding()
+    hideMarksExtension,
+    stylingExtension
   ];
 }

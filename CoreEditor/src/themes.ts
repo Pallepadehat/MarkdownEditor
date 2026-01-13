@@ -5,6 +5,8 @@
 
 import { EditorView } from '@codemirror/view';
 import { Extension } from '@codemirror/state';
+import { syntaxHighlighting, HighlightStyle } from '@codemirror/language';
+import { tags as t } from '@lezer/highlight';
 import { xcodeLight, xcodeDark } from '@uiw/codemirror-theme-xcode';
 
 // Base theme settings for layout and typography
@@ -12,10 +14,12 @@ const baseTheme = EditorView.baseTheme({
   '&': {
     height: '100%',
     fontSize: '15px',
-    fontFamily: '-apple-system, BlinkMacSystemFont, "SF Mono", Menlo, Monaco, monospace'
+    fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Mono", Menlo, monospace',
+    width: '100%',
+    margin: '0 auto'  // Center the container
   },
   '.cm-content': {
-    padding: '16px',
+    padding: '24px 16px', // More breathing room
     fontFamily: 'inherit'
   },
   '.cm-line': {
@@ -24,34 +28,40 @@ const baseTheme = EditorView.baseTheme({
   },
   '.cm-codeblock-line': {
     backgroundColor: 'var(--code-block-bg)',
-    paddingLeft: '12px' // Add some padding for the code content
+    paddingLeft: '12px',
+    borderRadius: '4px'
   },
   '.cm-scroller': {
     overflow: 'auto',
     fontFamily: 'inherit'
   },
-  // Gutter (Line Numbers) Styling
+  // Gutter (Line Numbers) Styling - Clean & Minimal
   '.cm-gutters': {
-    backgroundColor: 'var(--gutter-bg, transparent)',
+    backgroundColor: 'transparent', // Transparent gutter
     borderRight: 'none',
     color: 'var(--gutter-color, #999)',
     fontFamily: 'inherit',
-    lineHeight: '1.8' // Match line height of content
+    lineHeight: '1.8'
   },
   '.cm-gutterElement': {
     display: 'flex !important',
     alignItems: 'center',
     justifyContent: 'flex-end',
     fontSize: '0.85em',
-    opacity: '0.6',
-    transition: 'opacity 0.2s, color 0.2s',
+    opacity: '0.4', // Fainter
+    transition: 'opacity 0.2s',
   },
   '.cm-activeLineGutter': {
     backgroundColor: 'transparent !important',
     color: 'var(--accent-color, #007aff)',
     opacity: '1',
-    fontWeight: '600'
-  }
+    fontWeight: '500'
+  },
+  '.cm-activeLine': {
+    backgroundColor: 'transparent', // Remove active line highlight for "writer" feel
+    borderRadius: '4px'
+  },
+ 
 });
 
 // Theme variables for specific components (code blocks, badges)
@@ -73,17 +83,36 @@ const darkThemeVars = EditorView.theme({
   }
 }, { dark: true });
 
+// Custom Syntax Highlighting (MarkEdit Style)
+const markdownHighlightStyle = HighlightStyle.define([
+  // Dynamic Header Sizes
+  { tag: t.heading1, fontSize: '1.6em', fontWeight: '700' },
+  { tag: t.heading2, fontSize: '1.4em', fontWeight: '700' },
+  { tag: t.heading3, fontSize: '1.2em', fontWeight: '700' },
+  { tag: t.heading4, fontSize: '1.1em', fontWeight: '700' },
+  
+  // Restore necessary MarkEdit/Prose styles that `xcode` theme might miss
+  { tag: t.strong, fontWeight: 'bold' },
+  { tag: t.emphasis, fontStyle: 'italic' },
+  { tag: t.strikethrough, textDecoration: 'line-through' },
+  { tag: t.link, textDecoration: 'underline' }
+]);
+
+const markdownStyling = syntaxHighlighting(markdownHighlightStyle);
+
 // Exported theme extensions
 export const lightThemeExtension: Extension = [
   baseTheme,
   xcodeLight,
-  lightThemeVars
+  lightThemeVars,
+  markdownStyling
 ];
 
 export const darkThemeExtension: Extension = [
   baseTheme,
   xcodeDark,
-  darkThemeVars
+  darkThemeVars,
+  markdownStyling
 ];
 
 export function getThemeExtension(theme: 'light' | 'dark'): Extension {

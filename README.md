@@ -8,7 +8,6 @@ A premium, native-feeling Markdown editor component for iOS and macOS, powered b
 - **Linear Syntax Hiding**: Markdown markers (like `**`, `#`) are hidden on inactive lines for a clean reading experience but reappear instantly when editing.
 - **Premium Code Blocks**: Code blocks are styled with language badges and distinct backgrounds, supporting syntax highlighting for dozens of languages (Swift, TypeScript, PHP, etc.).
 - **Typesafe Configuration**: Fully configurable from Swift via a typesafe API (fonts, line numbers, wrapping, themes).
-- **Lightweight**: heavy code intelligence features have been removed to focus on a fast, distraction-free writing environment.
 
 ## Installation
 

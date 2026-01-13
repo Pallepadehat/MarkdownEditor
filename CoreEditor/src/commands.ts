@@ -284,83 +284,116 @@ export function slashCommandCompletion(context: CompletionContext): CompletionRe
 // Custom styling for the command palette
 const commandPaletteTheme = EditorView.baseTheme({
   '.cm-tooltip.cm-tooltip-autocomplete': {
-    border: '0.5px solid var(--border-color, rgba(0,0,0,0.1))',
-    borderRadius: '12px',
-    boxShadow: '0 10px 40px rgba(0, 0, 0, 0.2)',
-    backgroundColor: 'var(--tooltip-bg, rgba(255, 255, 255, 0.95))',
-    backdropFilter: 'blur(20px)',
-    '-webkit-backdrop-filter': 'blur(20px)',
-    padding: '6px',
+    border: '0.5px solid var(--border-color)',
+    borderRadius: '10px',
+    boxShadow: '0 8px 24px rgba(0, 0, 0, 0.12), 0 2px 8px rgba(0,0,0,0.04)', // Softer, more diffuse shadow
+    backgroundColor: 'var(--tooltip-bg)',
+    backdropFilter: 'blur(24px) saturate(180%)', // Standard macOS glass effect
+    '-webkit-backdrop-filter': 'blur(24px) saturate(180%)',
+    padding: '4px', // Tighter padding for outer container
     maxHeight: '320px',
-    minWidth: '300px'
+    minWidth: '280px'
   },
   '.cm-tooltip.cm-tooltip-autocomplete > ul': {
     fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", sans-serif',
     fontSize: '13px',
-    maxHeight: '300px',
-    gap: '2px',
+    maxHeight: '310px',
+    gap: '1px', // Tiny gap between items
     display: 'flex',
-    flexDirection: 'column'
+    flexDirection: 'column',
+    listStyle: 'none',
+    margin: '0',
+    padding: '0 4px 4px 4px' // Padding inside the scrollable area
   },
   '.cm-tooltip.cm-tooltip-autocomplete > ul > li': {
-    padding: '8px 12px',
-    borderRadius: '8px',
+    padding: '6px 10px 6px 8px', // Balanced padding
+    borderRadius: '6px', // Slightly smaller radius for items
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'space-between',
-    transition: 'background-color 0.1s ease',
-    margin: '0 2px'
+    transition: 'background-color 0s', // Instant selection change is more native-like
+    margin: '0',
+    lineHeight: '1.4',
+    minHeight: '26px',
+    cursor: 'default'
   },
   '.cm-tooltip.cm-tooltip-autocomplete > ul > li[aria-selected]': {
-    backgroundColor: 'var(--selection-bg, #007AFF)',
-    color: 'var(--selection-text, #ffffff)'
+    backgroundColor: 'var(--selection-bg)',
+    color: 'var(--selection-text)'
   },
   '.cm-completionLabel': {
-    fontWeight: '500',
-    flex: '0 0 auto'
+    fontWeight: '400', // Normal weight looks cleaner
+    fontSize: '13.5px', // Slightly larger for readability
+    flex: '0 0 auto',
+    letterSpacing: '-0.01em'
+  },
+  '.cm-tooltip.cm-tooltip-autocomplete > ul > li[aria-selected] .cm-completionLabel': {
+    fontWeight: '500' // Slight bold on selection
   },
   '.cm-completionDetail': {
-    color: 'var(--detail-color, #8e8e93)',
+    color: 'var(--detail-color)',
     fontSize: '12px',
     marginLeft: '12px',
     flex: '1 1 auto',
     textAlign: 'right',
-    opacity: '0.8'
+    opacity: '0.7',
+    fontVariantNumeric: 'tabular-nums'
   },
   '.cm-tooltip.cm-tooltip-autocomplete > ul > li[aria-selected] .cm-completionDetail': {
-    color: 'rgba(255,255,255,0.8)'
+    color: 'rgba(255,255,255,0.85)',
+    opacity: '1'
   },
   '.cm-completionMatchedText': {
     textDecoration: 'none',
-    fontWeight: '700'
+    fontWeight: '600',
+    color: 'var(--accent-color)' // Use accent color for matches in unselected items
+  },
+  '.cm-tooltip.cm-tooltip-autocomplete > ul > li[aria-selected] .cm-completionMatchedText': {
+    color: 'inherit' // White in selection
   },
   // Section headers
   '.cm-completionSection': {
-    padding: '8px 14px 4px',
-    fontSize: '11px',
+    padding: '8px 10px 4px',
+    fontSize: '10px',
     fontWeight: '600',
-    color: 'var(--section-color, #8e8e93)',
+    color: 'var(--section-color)',
     textTransform: 'uppercase',
-    letterSpacing: '0.5px',
-    marginTop: '4px',
-    borderTop: '1px solid var(--divider-color, rgba(0,0,0,0.05))'
+    letterSpacing: '0.6px',
+    marginTop: '6px',
+    marginBottom: '2px',
+    borderTop: '1px solid var(--divider-color)'
   },
   '.cm-completionSection:first-child': {
-    marginTop: '0',
+    marginTop: '2px',
     borderTop: 'none'
+  },
+  // Scrollbar styling
+  '.cm-tooltip.cm-tooltip-autocomplete > ul::-webkit-scrollbar': {
+    width: '10px'
+  },
+  '.cm-tooltip.cm-tooltip-autocomplete > ul::-webkit-scrollbar-track': {
+    background: 'transparent'
+  },
+  '.cm-tooltip.cm-tooltip-autocomplete > ul::-webkit-scrollbar-thumb': {
+    backgroundColor: 'var(--scrollbar-thumb)',
+    borderRadius: '10px',
+    border: '3px solid transparent',
+    backgroundClip: 'content-box'
   }
 });
 
 // Dark theme overrides
 const commandPaletteDarkTheme = EditorView.theme({
   '.cm-tooltip.cm-tooltip-autocomplete': {
-    '--tooltip-bg': 'rgba(30, 30, 30, 0.85)',
-    '--border-color': 'rgba(255,255,255,0.1)',
-    '--selection-bg': '#0A84FF',
+    '--tooltip-bg': 'rgba(30, 30, 30, 0.75)', // More translucent
+    '--border-color': 'rgba(255,255,255,0.12)',
+    '--selection-bg': '#0061e8', // System Blue
     '--selection-text': '#ffffff',
-    '--detail-color': '#98989d',
-    '--section-color': '#86868b',
-    '--divider-color': 'rgba(255,255,255,0.1)'
+    '--detail-color': 'rgba(235, 235, 245, 0.6)',
+    '--section-color': 'rgba(235, 235, 245, 0.4)',
+    '--divider-color': 'rgba(84, 84, 88, 0.5)',
+    '--accent-color': '#0a84ff',
+    '--scrollbar-thumb': 'rgba(255, 255, 255, 0.3)'
   }
 }, { dark: true });
 
@@ -368,12 +401,14 @@ const commandPaletteDarkTheme = EditorView.theme({
 const commandPaletteLightTheme = EditorView.theme({
   '.cm-tooltip.cm-tooltip-autocomplete': {
     '--tooltip-bg': 'rgba(255, 255, 255, 0.85)',
-    '--border-color': 'rgba(0,0,0,0.1)',
+    '--border-color': 'rgba(0,0,0,0.1)', // Subtle border
     '--selection-bg': '#007AFF',
     '--selection-text': '#ffffff',
-    '--detail-color': '#8e8e93',
-    '--section-color': '#6e6e73',
-    '--divider-color': 'rgba(0,0,0,0.05)'
+    '--detail-color': 'rgba(60, 60, 67, 0.6)',
+    '--section-color': 'rgba(60, 60, 67, 0.4)',
+    '--divider-color': 'rgba(60, 60, 67, 0.1)',
+    '--accent-color': '#007AFF', // System Blue
+    '--scrollbar-thumb': 'rgba(0, 0, 0, 0.2)'
   }
 }, { dark: false });
 

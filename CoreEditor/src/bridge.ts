@@ -17,6 +17,15 @@ declare global {
   }
 }
 
+export interface EditorConfig {
+  fontSize?: number;
+  fontFamily?: string;
+  lineHeight?: number;
+  showLineNumbers?: boolean;
+  wrapLines?: boolean;
+  theme?: 'light' | 'dark';
+}
+
 export interface EditorAPI {
   // Content management
   getContent: () => string;
@@ -52,6 +61,7 @@ export interface EditorAPI {
   setFontSize: (size: number) => void;
   setLineHeight: (height: number) => void;
   setFontFamily: (family: string) => void;
+  updateConfiguration: (config: EditorConfig) => void;
 }
 
 export type MessageType = 

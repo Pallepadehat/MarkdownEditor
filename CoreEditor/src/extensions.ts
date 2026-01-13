@@ -12,7 +12,7 @@ import {
   foldKeymap
 } from '@codemirror/language';
 import { Extension, Prec } from '@codemirror/state';
-import { EditorView, keymap, lineNumbers, highlightActiveLine, highlightActiveLineGutter, drawSelection, dropCursor, rectangularSelection, crosshairCursor } from '@codemirror/view';
+import { EditorView, keymap, highlightActiveLine, highlightActiveLineGutter, drawSelection, dropCursor, rectangularSelection, crosshairCursor } from '@codemirror/view';
 import { defaultKeymap, history, historyKeymap, indentWithTab } from '@codemirror/commands';
 import { closeBrackets, closeBracketsKeymap, autocompletion } from '@codemirror/autocomplete';
 import { searchKeymap, highlightSelectionMatches } from '@codemirror/search';
@@ -60,7 +60,7 @@ export function createAutocompletion(): Extension {
  */
 export function createBaseExtensions(): Extension[] {
   return [
-    lineNumbers(),
+    // lineNumbers() is now managed dynamically in editor.ts
     highlightActiveLineGutter(),
     highlightActiveLine(),
     history(),

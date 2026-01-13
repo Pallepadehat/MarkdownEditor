@@ -4,7 +4,7 @@
  */
 
 import { EditorState, Compartment } from '@codemirror/state';
-import { EditorView } from '@codemirror/view';
+import { EditorView, lineNumbers } from '@codemirror/view';
 import { undo, redo } from '@codemirror/commands';
 import { createMarkdownExtensions } from './extensions';
 import { getThemeExtension } from './themes';
@@ -18,10 +18,11 @@ import {
 
 // Compartments for dynamic reconfiguration
 const themeCompartment = new Compartment();
-const fontSizeCompartment = new Compartment();
+const styleCompartment = new Compartment();
+const lineNumbersCompartment = new Compartment();
+const lineWrappingCompartment = new Compartment();
 
 let editorView: EditorView | null = null;
-let currentTheme: 'light' | 'dark' = 'light';
 
 // Debounce content change notifications
 let contentChangeTimeout: ReturnType<typeof setTimeout> | null = null;
@@ -39,15 +40,37 @@ function debounceContentChange(content: string): void {
 /**
  * Initialize the editor
  */
+let currentConfig: import('./bridge').EditorConfig = {
+  theme: 'light',
+  fontSize: 15,
+  fontFamily: '-apple-system, BlinkMacSystemFont, "SF Mono", Menlo, Monaco, monospace',
+  lineHeight: 1.8,
+  showLineNumbers: true,
+  wrapLines: true
+};
+
+/**
+ * Initialize the editor
+ */
 function initEditor(container: HTMLElement, initialContent: string = '', theme: 'light' | 'dark' = 'light'): EditorView {
-  currentTheme = theme;
+  currentConfig.theme = theme;
   
   const state = EditorState.create({
     doc: initialContent,
     extensions: [
       ...createMarkdownExtensions(),
       themeCompartment.of(getThemeExtension(theme)),
-      fontSizeCompartment.of([]),
+      styleCompartment.of(EditorView.theme({
+        '&': { 
+          fontSize: `${currentConfig.fontSize}px`,
+          fontFamily: currentConfig.fontFamily || 'monospace'
+        },
+        '.cm-line': { 
+          lineHeight: String(currentConfig.lineHeight) 
+        }
+      })),
+      lineNumbersCompartment.of(currentConfig.showLineNumbers ? lineNumbers() : []),
+      lineWrappingCompartment.of(currentConfig.wrapLines ? EditorView.lineWrapping : []),
       
       // Content change listener
       EditorView.updateListener.of((update) => {
@@ -247,43 +270,66 @@ const editorAPI: EditorAPI = {
     if (editorView) redo(editorView);
   },
   
-  setTheme(theme: 'light' | 'dark'): void {
-    if (!editorView || theme === currentTheme) return;
+  updateConfiguration(config: import('./bridge').EditorConfig): void {
+    if (!editorView) return;
     
-    currentTheme = theme;
-    editorView.dispatch({
-      effects: themeCompartment.reconfigure(getThemeExtension(theme))
-    });
+    // Merge config
+    currentConfig = { ...currentConfig, ...config };
+    
+    const effects = [];
+    
+    // Theme
+    if (config.theme) {
+      effects.push(themeCompartment.reconfigure(getThemeExtension(config.theme)));
+    }
+    
+    // Styles (Font size, family, line height)
+    if (config.fontSize || config.fontFamily || config.lineHeight) {
+      effects.push(styleCompartment.reconfigure(EditorView.theme({
+        '&': { 
+          fontSize: `${currentConfig.fontSize}px`,
+          fontFamily: currentConfig.fontFamily || 'monospace'
+        },
+        '.cm-line': { 
+          lineHeight: String(currentConfig.lineHeight) 
+        }
+      })));
+    }
+
+    // Line Numbers
+    if (config.showLineNumbers !== undefined) {
+      effects.push(lineNumbersCompartment.reconfigure(
+        config.showLineNumbers ? lineNumbers() : []
+      ));
+    }
+
+    // Line Wrapping
+    if (config.wrapLines !== undefined) {
+      effects.push(lineWrappingCompartment.reconfigure(
+        config.wrapLines ? EditorView.lineWrapping : []
+      ));
+    }
+    
+    if (effects.length > 0) {
+      editorView.dispatch({ effects });
+    }
+  },
+  
+  // Legacy support - map to updateConfiguration
+  setTheme(theme: 'light' | 'dark'): void {
+    this.updateConfiguration({ theme });
   },
   
   setFontSize(size: number): void {
-    if (!editorView) return;
-    
-    editorView.dispatch({
-      effects: fontSizeCompartment.reconfigure(
-        EditorView.theme({ '&': { fontSize: `${size}px` } })
-      )
-    });
+    this.updateConfiguration({ fontSize: size });
   },
   
   setLineHeight(height: number): void {
-    if (!editorView) return;
-    
-    editorView.dispatch({
-      effects: fontSizeCompartment.reconfigure(
-        EditorView.theme({ '.cm-line': { lineHeight: String(height) } })
-      )
-    });
+    this.updateConfiguration({ lineHeight: height });
   },
   
   setFontFamily(family: string): void {
-    if (!editorView) return;
-    
-    editorView.dispatch({
-      effects: fontSizeCompartment.reconfigure(
-        EditorView.theme({ '&': { fontFamily: family } })
-      )
-    });
+    this.updateConfiguration({ fontFamily: family });
   }
 };
 

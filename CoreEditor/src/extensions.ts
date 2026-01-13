@@ -17,7 +17,8 @@ import { defaultKeymap, history, historyKeymap, indentWithTab } from '@codemirro
 import { closeBrackets, closeBracketsKeymap, autocompletion } from '@codemirror/autocomplete';
 import { searchKeymap, highlightSelectionMatches } from '@codemirror/search';
 import { slashCommandCompletion, slashCommandKeymap, commandPaletteThemes } from './commands';
-import { hideMarksExtension, stylingExtension } from './styling';
+import { stylingExtension } from './styling';
+import { toggleBold, toggleItalic, toggleList, toggleOrderedList, cycleTodo } from './formatting';
 
 /**
  * Create Markdown language support
@@ -35,11 +36,17 @@ export function createMarkdownLanguage(): Extension {
 export function createMarkdownKeymap(): Extension {
   const markdownKeys = keymap.of([
     // We'll wire these up to the actual commands via the API
-    { key: 'Mod-b', run: () => { window.editorAPI?.toggleBold(); return true; } },
-    { key: 'Mod-i', run: () => { window.editorAPI?.toggleItalic(); return true; } },
+    // We'll wire these up to the actual commands via the API or internal logic
+    { key: 'Mod-b', run: toggleBold },
+    { key: 'Mod-i', run: toggleItalic },
     { key: 'Mod-`', run: () => { window.editorAPI?.toggleCode(); return true; } },
     { key: 'Mod-k', run: () => { window.editorAPI?.insertLink(''); return true; } },
-    { key: 'Mod-Shift-k', run: () => { window.editorAPI?.insertImage(''); return true; } }
+    { key: 'Mod-Shift-k', run: () => { window.editorAPI?.insertImage(''); return true; } },
+    
+    // New Shortcuts
+    { key: 'Ctrl-Mod-l', run: toggleList },
+    { key: 'Ctrl-Mod-o', run: toggleOrderedList },
+    { key: 'Ctrl-Mod-t', run: cycleTodo }
   ]);
   
   return Prec.high(markdownKeys);
@@ -99,7 +106,6 @@ export function createMarkdownExtensions(): Extension[] {
     createAutocompletion(),
     slashCommandKeymap(),
     ...commandPaletteThemes(),
-    hideMarksExtension,
     stylingExtension
   ];
 }

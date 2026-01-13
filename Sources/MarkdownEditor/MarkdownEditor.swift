@@ -1,7 +1,7 @@
 // MarkdownEditor
 // A CodeMirror 6-based Markdown editor for macOS
 //
-// Copyright (c) 2026 NotePane. MIT License.
+// Copyright (c) 2026 Patrick Jakobsen. MIT License.
 
 /// # MarkdownEditor
 ///

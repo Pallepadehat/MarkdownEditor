@@ -102,15 +102,15 @@ const markdownStyling = syntaxHighlighting(markdownHighlightStyle);
 
 // Exported theme extensions
 export const lightThemeExtension: Extension = [
-  baseTheme,
   xcodeLight,
+  baseTheme,
   lightThemeVars,
   markdownStyling
 ];
 
 export const darkThemeExtension: Extension = [
-  baseTheme,
   xcodeDark,
+  baseTheme,
   darkThemeVars,
   markdownStyling
 ];

@@ -24,7 +24,7 @@ const lineWrappingCompartment = new Compartment();
 
 let editorView: EditorView | null = null;
 
-// Debounce content change notifications
+// Debounce content change notifications to avoid flooding the bridge
 let contentChangeTimeout: ReturnType<typeof setTimeout> | null = null;
 
 function debounceContentChange(content: string): void {
@@ -50,7 +50,12 @@ let currentConfig: import('./bridge').EditorConfig = {
 };
 
 /**
- * Initialize the editor
+ * Initialize the editor.
+ * 
+ * @param container - The DOM element to append the editor to.
+ * @param initialContent - The initial Markdown content (default: empty).
+ * @param theme - The initial color theme ('light' or 'dark').
+ * @returns The created EditorView instance.
  */
 function initEditor(container: HTMLElement, initialContent: string = '', theme: 'light' | 'dark' = 'light'): EditorView {
   currentConfig.theme = theme;
@@ -97,7 +102,11 @@ function initEditor(container: HTMLElement, initialContent: string = '', theme: 
 }
 
 /**
- * Wrap selection with markers (e.g., **bold**, *italic*)
+ * Wrap selection with markers (e.g., **bold**, *italic*).
+ * If the selection is already wrapped, unwraps it.
+ * 
+ * @param prefix - The starting marker.
+ * @param suffix - The ending marker (defaults to prefix).
  */
 function wrapSelection(prefix: string, suffix: string = prefix): void {
   if (!editorView) return;
@@ -131,7 +140,9 @@ function wrapSelection(prefix: string, suffix: string = prefix): void {
 }
 
 /**
- * Insert text at cursor or replace selection
+ * Insert text at cursor or replace selection.
+ * 
+ * @param text - The text to insert.
  */
 function insertText(text: string): void {
   if (!editorView) return;
@@ -144,7 +155,9 @@ function insertText(text: string): void {
 }
 
 /**
- * Insert text at start of current line
+ * Insert text at the start of the current line (e.g., for lists or blockquotes).
+ * 
+ * @param prefix - The text to insert at the beginning of the line.
  */
 function insertAtLineStart(prefix: string): void {
   if (!editorView) return;

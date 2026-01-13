@@ -12,19 +12,27 @@ import {
 import { Extension, Prec } from '@codemirror/state';
 import { EditorView, keymap } from '@codemirror/view';
 
-// Command definition with label, description, shortcut, and action
+/**
+ * Definition of a slash command.
+ */
 interface SlashCommand {
+  /** Label displayed in the completion list. */
   label: string;
+  /** Description or preview of the command. */
   detail: string;
+  /** Optional keyboard shortcut to display. */
   shortcut?: string;
+  /** Optional additional info (right-aligned). */
   info?: string;
+  /** Section header for grouping. */
   section: string;
+  /** Function to execute when the command is selected. */
   apply: (view: EditorView, completion: Completion, from: number, to: number) => void;
 }
 
 // All available slash commands
 const slashCommands: SlashCommand[] = [
-  // Text Formatting
+  // -- Text Formatting --
   {
     label: 'bold',
     detail: 'Make text bold',
@@ -253,7 +261,8 @@ function createCompletionItems(): Completion[] {
 }
 
 /**
- * Slash command completion source
+ * CodeMirror completion source for slash commands.
+ * Triggered by typing "/" at the start of a line or after whitespace.
  */
 export function slashCommandCompletion(context: CompletionContext): CompletionResult | null {
   // Look for "/" at the start of a line or after whitespace

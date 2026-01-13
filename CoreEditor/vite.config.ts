@@ -10,13 +10,8 @@ export default defineConfig(({ command }) => ({
   build: {
     outDir: '../Sources/MarkdownEditor/Resources',
     emptyOutDir: false,
-    lib: {
-      entry: 'src/editor.ts',
-      name: 'MarkdownEditor',
-      fileName: () => 'editor.js',
-      formats: ['iife']
-    },
     rollupOptions: {
+      input: 'editor.html',
       output: {
         inlineDynamicImports: true
       }

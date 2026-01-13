@@ -18,8 +18,7 @@ let package = Package(
         .target(
             name: "MarkdownEditor",
             resources: [
-                .copy("Resources/editor.html"),
-                .copy("Resources/editor.js")
+                .copy("Resources/editor.html")
             ]
         ),
         .testTarget(

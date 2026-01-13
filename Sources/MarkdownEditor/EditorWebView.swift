@@ -199,19 +199,9 @@ public struct EditorWebView: NSViewRepresentable {
             return
         }
         
-        do {
-            var htmlContent = try String(contentsOf: htmlURL, encoding: .utf8)
-            
-            // Inject initial theme
-            htmlContent = htmlContent.replacingOccurrences(
-                of: "data-theme=\"light\"",
-                with: "data-theme=\"\(theme.rawValue)\""
-            )
-            
-            webView.loadHTMLString(htmlContent, baseURL: htmlURL.deletingLastPathComponent())
-        } catch {
-            print("[EditorWebView] Failed to load editor.html: \(error)")
-        }
+        // Use loadFileURL for better performance and sandbox handling.
+        // We grant read access to the Resources directory.
+        webView.loadFileURL(htmlURL, allowingReadAccessTo: htmlURL.deletingLastPathComponent())
     }
     
     // MARK: - Coordinator
@@ -244,9 +234,16 @@ public struct EditorWebView: NSViewRepresentable {
         public func editorDidBecomeReady() {
             if !initialContent.isEmpty {
                 Task { @MainActor in
+                    // Apply theme first
+                    await bridge.setTheme(currentTheme)
+                    // Then set content
                     await bridge.setContent(initialContent)
                     lastKnownContent = initialContent
                 }
+            } else {
+                 Task { @MainActor in
+                    await bridge.setTheme(currentTheme)
+                 }
             }
             onReady?()
         }

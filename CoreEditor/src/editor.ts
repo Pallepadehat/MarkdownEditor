@@ -1,0 +1,313 @@
+/**
+ * Main editor entry point
+ * Initializes CodeMirror 6 with Markdown support and exposes API to Swift
+ */
+
+import { EditorState, Compartment } from '@codemirror/state';
+import { EditorView } from '@codemirror/view';
+import { undo, redo } from '@codemirror/commands';
+import { createMarkdownExtensions } from './extensions';
+import { getThemeExtension } from './themes';
+import { 
+  EditorAPI, 
+  notifyContentChanged, 
+  notifySelectionChanged, 
+  notifyReady, 
+  notifyFocus 
+} from './bridge';
+
+// Compartments for dynamic reconfiguration
+const themeCompartment = new Compartment();
+const fontSizeCompartment = new Compartment();
+
+let editorView: EditorView | null = null;
+let currentTheme: 'light' | 'dark' = 'light';
+
+// Debounce content change notifications
+let contentChangeTimeout: ReturnType<typeof setTimeout> | null = null;
+
+function debounceContentChange(content: string): void {
+  if (contentChangeTimeout) {
+    clearTimeout(contentChangeTimeout);
+  }
+  contentChangeTimeout = setTimeout(() => {
+    notifyContentChanged(content);
+    contentChangeTimeout = null;
+  }, 100);
+}
+
+/**
+ * Initialize the editor
+ */
+function initEditor(container: HTMLElement, initialContent: string = '', theme: 'light' | 'dark' = 'light'): EditorView {
+  currentTheme = theme;
+  
+  const state = EditorState.create({
+    doc: initialContent,
+    extensions: [
+      ...createMarkdownExtensions(),
+      themeCompartment.of(getThemeExtension(theme)),
+      fontSizeCompartment.of([]),
+      
+      // Content change listener
+      EditorView.updateListener.of((update) => {
+        if (update.docChanged) {
+          debounceContentChange(update.state.doc.toString());
+        }
+        if (update.selectionSet) {
+          const { from, to } = update.state.selection.main;
+          notifySelectionChanged(from, to);
+        }
+        if (update.focusChanged) {
+          notifyFocus(update.view.hasFocus);
+        }
+      })
+    ]
+  });
+  
+  editorView = new EditorView({
+    state,
+    parent: container
+  });
+  
+  return editorView;
+}
+
+/**
+ * Wrap selection with markers (e.g., **bold**, *italic*)
+ */
+function wrapSelection(prefix: string, suffix: string = prefix): void {
+  if (!editorView) return;
+  
+  const { from, to } = editorView.state.selection.main;
+  const selectedText = editorView.state.sliceDoc(from, to);
+  
+  // Check if already wrapped - if so, unwrap
+  const beforeStart = Math.max(0, from - prefix.length);
+  const afterEnd = Math.min(editorView.state.doc.length, to + suffix.length);
+  const textBefore = editorView.state.sliceDoc(beforeStart, from);
+  const textAfter = editorView.state.sliceDoc(to, afterEnd);
+  
+  if (textBefore === prefix && textAfter === suffix) {
+    // Unwrap
+    editorView.dispatch({
+      changes: [
+        { from: beforeStart, to: from, insert: '' },
+        { from: to, to: afterEnd, insert: '' }
+      ],
+      selection: { anchor: beforeStart, head: beforeStart + selectedText.length }
+    });
+  } else {
+    // Wrap
+    const newText = prefix + selectedText + suffix;
+    editorView.dispatch({
+      changes: { from, to, insert: newText },
+      selection: { anchor: from + prefix.length, head: from + prefix.length + selectedText.length }
+    });
+  }
+}
+
+/**
+ * Insert text at cursor or replace selection
+ */
+function insertText(text: string): void {
+  if (!editorView) return;
+  
+  const { from, to } = editorView.state.selection.main;
+  editorView.dispatch({
+    changes: { from, to, insert: text },
+    selection: { anchor: from + text.length }
+  });
+}
+
+/**
+ * Insert text at start of current line
+ */
+function insertAtLineStart(prefix: string): void {
+  if (!editorView) return;
+  
+  const { from } = editorView.state.selection.main;
+  const line = editorView.state.doc.lineAt(from);
+  
+  editorView.dispatch({
+    changes: { from: line.from, to: line.from, insert: prefix }
+  });
+}
+
+/**
+ * Editor API exposed to Swift
+ */
+const editorAPI: EditorAPI = {
+  getContent(): string {
+    return editorView?.state.doc.toString() ?? '';
+  },
+  
+  setContent(content: string): void {
+    if (!editorView) return;
+    
+    editorView.dispatch({
+      changes: { from: 0, to: editorView.state.doc.length, insert: content }
+    });
+  },
+  
+  getSelection(): { from: number; to: number } {
+    if (!editorView) return { from: 0, to: 0 };
+    const { from, to } = editorView.state.selection.main;
+    return { from, to };
+  },
+  
+  setSelection(from: number, to: number): void {
+    if (!editorView) return;
+    editorView.dispatch({ selection: { anchor: from, head: to } });
+  },
+  
+  toggleBold(): void {
+    wrapSelection('**');
+  },
+  
+  toggleItalic(): void {
+    wrapSelection('*');
+  },
+  
+  toggleCode(): void {
+    wrapSelection('`');
+  },
+  
+  toggleStrikethrough(): void {
+    wrapSelection('~~');
+  },
+  
+  insertLink(url: string, title?: string): void {
+    if (!editorView) return;
+    
+    const { from, to } = editorView.state.selection.main;
+    const selectedText = editorView.state.sliceDoc(from, to);
+    const linkText = selectedText || title || 'link text';
+    const linkUrl = url || 'https://';
+    
+    editorView.dispatch({
+      changes: { from, to, insert: `[${linkText}](${linkUrl})` }
+    });
+  },
+  
+  insertImage(url: string, alt?: string): void {
+    if (!editorView) return;
+    
+    const { from, to } = editorView.state.selection.main;
+    const altText = alt || 'image';
+    const imageUrl = url || 'https://';
+    
+    editorView.dispatch({
+      changes: { from, to, insert: `![${altText}](${imageUrl})` }
+    });
+  },
+  
+  insertHeading(level: 1 | 2 | 3 | 4 | 5 | 6): void {
+    const prefix = '#'.repeat(level) + ' ';
+    insertAtLineStart(prefix);
+  },
+  
+  insertBlockquote(): void {
+    insertAtLineStart('> ');
+  },
+  
+  insertCodeBlock(language?: string): void {
+    const lang = language || '';
+    insertText(`\`\`\`${lang}\n\n\`\`\``);
+    // Move cursor into the code block
+    if (editorView) {
+      const { from } = editorView.state.selection.main;
+      editorView.dispatch({
+        selection: { anchor: from - 4 }
+      });
+    }
+  },
+  
+  insertList(ordered: boolean): void {
+    insertAtLineStart(ordered ? '1. ' : '- ');
+  },
+  
+  insertHorizontalRule(): void {
+    insertText('\n---\n');
+  },
+  
+  focus(): void {
+    editorView?.focus();
+  },
+  
+  blur(): void {
+    editorView?.contentDOM.blur();
+  },
+  
+  undo(): void {
+    if (editorView) undo(editorView);
+  },
+  
+  redo(): void {
+    if (editorView) redo(editorView);
+  },
+  
+  setTheme(theme: 'light' | 'dark'): void {
+    if (!editorView || theme === currentTheme) return;
+    
+    currentTheme = theme;
+    editorView.dispatch({
+      effects: themeCompartment.reconfigure(getThemeExtension(theme))
+    });
+  },
+  
+  setFontSize(size: number): void {
+    if (!editorView) return;
+    
+    editorView.dispatch({
+      effects: fontSizeCompartment.reconfigure(
+        EditorView.theme({ '&': { fontSize: `${size}px` } })
+      )
+    });
+  },
+  
+  setLineHeight(height: number): void {
+    if (!editorView) return;
+    
+    editorView.dispatch({
+      effects: fontSizeCompartment.reconfigure(
+        EditorView.theme({ '.cm-line': { lineHeight: String(height) } })
+      )
+    });
+  },
+  
+  setFontFamily(family: string): void {
+    if (!editorView) return;
+    
+    editorView.dispatch({
+      effects: fontSizeCompartment.reconfigure(
+        EditorView.theme({ '&': { fontFamily: family } })
+      )
+    });
+  }
+};
+
+// Expose API globally
+window.editorAPI = editorAPI;
+
+// Initialize when DOM is ready
+function init(): void {
+  const container = document.getElementById('editor');
+  if (!container) {
+    console.error('Editor container not found');
+    return;
+  }
+  
+  // Get initial config from data attributes
+  const initialContent = container.dataset.content || '';
+  const initialTheme = (container.dataset.theme as 'light' | 'dark') || 'light';
+  
+  initEditor(container, initialContent, initialTheme);
+  notifyReady();
+}
+
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', init);
+} else {
+  init();
+}

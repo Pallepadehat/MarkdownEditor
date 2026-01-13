@@ -4,6 +4,7 @@
  */
 
 import { markdown } from '@codemirror/lang-markdown';
+import { languages } from '@codemirror/language-data';
 import { 
   indentOnInput,
   bracketMatching,
@@ -22,7 +23,7 @@ import { syntaxHiding } from './syntaxHiding';
  * Create Markdown language support
  */
 export function createMarkdownLanguage(): Extension {
-  return markdown();
+  return markdown({ codeLanguages: languages });
 }
 
 /**

@@ -19,9 +19,10 @@ const hideDecoration = Decoration.replace({
   class: 'cm-syntax-marker'
 });
 
-const codeBlockLineDecoration = Decoration.line({
-  class: 'cm-codeblock-line'
-});
+const codeBlockTopDecoration = Decoration.line({ class: 'cm-codeblock-line cm-codeblock-top' });
+const codeBlockBottomDecoration = Decoration.line({ class: 'cm-codeblock-line cm-codeblock-bottom' });
+const codeBlockMiddleDecoration = Decoration.line({ class: 'cm-codeblock-line cm-codeblock-middle' });
+const codeBlockSingleDecoration = Decoration.line({ class: 'cm-codeblock-line cm-codeblock-single' });
 
 const hideSyntaxField = StateField.define<DecorationSet>({
   create(_state) {
@@ -51,11 +52,17 @@ const hideSyntaxField = StateField.define<DecorationSet>({
           // Color background for all lines in the block
           const startLine = tr.state.doc.lineAt(node.from).number;
           const endLine = tr.state.doc.lineAt(node.to).number;
-          
+          const isSingleLine = startLine === endLine;
+
           for (let i = startLine; i <= endLine; i++) {
              const l = tr.state.doc.line(i);
+             let value = codeBlockMiddleDecoration;
+             if (isSingleLine) value = codeBlockSingleDecoration;
+             else if (i === startLine) value = codeBlockTopDecoration;
+             else if (i === endLine) value = codeBlockBottomDecoration;
+
              // Decoration.line ranges are length 0 at start of line
-             decos.push({ from: l.from, to: l.from, value: codeBlockLineDecoration });
+             decos.push({ from: l.from, to: l.from, value });
           }
         }
 
@@ -79,7 +86,7 @@ const hideSyntaxField = StateField.define<DecorationSet>({
                 }
              }
           }
-        } else if (node.name.includes('Formatting') || (node.name.includes('Mark') && node.name !== "CodeMark")) {
+        } else if (['HeaderMark', 'QuoteMark', 'ListMark', 'EmphasisMark', 'StrongEmphasisMark', 'LinkMark'].includes(node.name)) {
           // 3. Handle other Markdown syntax (Headers, lists, etc.)
            if (nodeLine !== cursorLine) {
              decos.push({ from: node.from, to: node.to, value: hideDecoration });
@@ -111,10 +118,35 @@ const hideSyntaxTheme = EditorView.baseTheme({
     padding: '2px 6px',
     border: '1px solid var(--badge-border, #d1d1d6)',
     borderRadius: '4px',
-    margin: '4px',
-    fontFamily: '-apple-system, system-ui, sans-serif',
+    margin: '6px 4px 0 0',
+    fontFamily: '"SF Mono", Menlo, Monaco, monospace',
     fontWeight: '600',
-    backgroundColor: 'var(--badge-bg, transparent)'
+    backgroundColor: 'var(--badge-bg, transparent)',
+    zIndex: '2',
+    position: 'relative'
+  },
+  '.cm-codeblock-line': {
+    paddingLeft: '6px',
+    paddingRight: '6px'
+  },
+  '.cm-codeblock-top': {
+    borderTopLeftRadius: '8px',
+    borderTopRightRadius: '8px',
+    marginTop: '8px',
+    paddingTop: '6px'
+  },
+  '.cm-codeblock-bottom': {
+    borderBottomLeftRadius: '8px',
+    borderBottomRightRadius: '8px',
+    marginBottom: '8px',
+    paddingBottom: '6px'
+  },
+  '.cm-codeblock-single': {
+    borderRadius: '8px',
+    marginTop: '8px',
+    marginBottom: '8px',
+    paddingTop: '6px',
+    paddingBottom: '6px'
   }
 });
 

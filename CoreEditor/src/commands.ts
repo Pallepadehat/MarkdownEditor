@@ -284,75 +284,96 @@ export function slashCommandCompletion(context: CompletionContext): CompletionRe
 // Custom styling for the command palette
 const commandPaletteTheme = EditorView.baseTheme({
   '.cm-tooltip.cm-tooltip-autocomplete': {
-    border: '1px solid var(--border-color, #e2e8f0)',
-    borderRadius: '8px',
-    boxShadow: '0 4px 20px rgba(0, 0, 0, 0.15)',
-    backgroundColor: 'var(--tooltip-bg, #ffffff)',
-    padding: '4px',
+    border: '0.5px solid var(--border-color, rgba(0,0,0,0.1))',
+    borderRadius: '12px',
+    boxShadow: '0 10px 40px rgba(0, 0, 0, 0.2)',
+    backgroundColor: 'var(--tooltip-bg, rgba(255, 255, 255, 0.95))',
+    backdropFilter: 'blur(20px)',
+    '-webkit-backdrop-filter': 'blur(20px)',
+    padding: '6px',
     maxHeight: '320px',
-    minWidth: '280px'
+    minWidth: '300px'
   },
   '.cm-tooltip.cm-tooltip-autocomplete > ul': {
-    fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Text", sans-serif',
+    fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", sans-serif',
     fontSize: '13px',
-    maxHeight: '300px'
+    maxHeight: '300px',
+    gap: '2px',
+    display: 'flex',
+    flexDirection: 'column'
   },
   '.cm-tooltip.cm-tooltip-autocomplete > ul > li': {
     padding: '8px 12px',
-    borderRadius: '6px',
+    borderRadius: '8px',
     display: 'flex',
     alignItems: 'center',
-    justifyContent: 'space-between'
+    justifyContent: 'space-between',
+    transition: 'background-color 0.1s ease',
+    margin: '0 2px'
   },
   '.cm-tooltip.cm-tooltip-autocomplete > ul > li[aria-selected]': {
-    backgroundColor: 'var(--selection-bg, rgba(59, 130, 246, 0.15))',
-    color: 'inherit'
+    backgroundColor: 'var(--selection-bg, #007AFF)',
+    color: 'var(--selection-text, #ffffff)'
   },
   '.cm-completionLabel': {
     fontWeight: '500',
     flex: '0 0 auto'
   },
   '.cm-completionDetail': {
-    color: 'var(--gutter-color, #94a3b8)',
+    color: 'var(--detail-color, #8e8e93)',
     fontSize: '12px',
     marginLeft: '12px',
     flex: '1 1 auto',
-    textAlign: 'right'
+    textAlign: 'right',
+    opacity: '0.8'
+  },
+  '.cm-tooltip.cm-tooltip-autocomplete > ul > li[aria-selected] .cm-completionDetail': {
+    color: 'rgba(255,255,255,0.8)'
   },
   '.cm-completionMatchedText': {
-    color: 'var(--accent-color, #2563eb)',
-    fontWeight: '600'
+    textDecoration: 'none',
+    fontWeight: '700'
   },
   // Section headers
   '.cm-completionSection': {
-    padding: '6px 12px 4px',
+    padding: '8px 14px 4px',
     fontSize: '11px',
     fontWeight: '600',
-    color: 'var(--gutter-color, #94a3b8)',
+    color: 'var(--section-color, #8e8e93)',
     textTransform: 'uppercase',
-    letterSpacing: '0.5px'
+    letterSpacing: '0.5px',
+    marginTop: '4px',
+    borderTop: '1px solid var(--divider-color, rgba(0,0,0,0.05))'
+  },
+  '.cm-completionSection:first-child': {
+    marginTop: '0',
+    borderTop: 'none'
   }
 });
 
 // Dark theme overrides
 const commandPaletteDarkTheme = EditorView.theme({
   '.cm-tooltip.cm-tooltip-autocomplete': {
-    '--tooltip-bg': '#1e293b',
-    '--border-color': '#334155',
-    '--selection-bg': 'rgba(99, 102, 241, 0.25)',
-    '--gutter-color': '#64748b',
-    '--accent-color': '#60a5fa'
+    '--tooltip-bg': 'rgba(30, 30, 30, 0.85)',
+    '--border-color': 'rgba(255,255,255,0.1)',
+    '--selection-bg': '#0A84FF',
+    '--selection-text': '#ffffff',
+    '--detail-color': '#98989d',
+    '--section-color': '#86868b',
+    '--divider-color': 'rgba(255,255,255,0.1)'
   }
 }, { dark: true });
 
 // Light theme overrides
 const commandPaletteLightTheme = EditorView.theme({
   '.cm-tooltip.cm-tooltip-autocomplete': {
-    '--tooltip-bg': '#ffffff',
-    '--border-color': '#e2e8f0',
-    '--selection-bg': 'rgba(59, 130, 246, 0.15)',
-    '--gutter-color': '#94a3b8',
-    '--accent-color': '#2563eb'
+    '--tooltip-bg': 'rgba(255, 255, 255, 0.85)',
+    '--border-color': 'rgba(0,0,0,0.1)',
+    '--selection-bg': '#007AFF',
+    '--selection-text': '#ffffff',
+    '--detail-color': '#8e8e93',
+    '--section-color': '#6e6e73',
+    '--divider-color': 'rgba(0,0,0,0.05)'
   }
 }, { dark: false });
 
@@ -375,18 +396,22 @@ export function slashCommandKeymap(): Extension {
     {
       key: '/',
       run: (view) => {
-        const { from } = view.state.selection.main;
+        const { from, to } = view.state.selection.main;
+        if (from !== to) return false; // Don't trigger on selection replacement
+
         const line = view.state.doc.lineAt(from);
         const textBefore = view.state.sliceDoc(line.from, from);
         
         // Only trigger if at start of line or after whitespace
         if (textBefore.length === 0 || /\s$/.test(textBefore)) {
-          // Insert the "/" and start completion
+          // Insert the "/" and EXPLICITLY set selection to be after it
           view.dispatch({
-            changes: { from, to: from, insert: '/' }
+            changes: { from, to: from, insert: '/' },
+            selection: { anchor: from + 1 }, // Ensure cursor moves forward
+            scrollIntoView: true
           });
-          // Start completion after a small delay to let the "/" be inserted
-          setTimeout(() => startCompletion(view), 10);
+          // Start completion after a small delay to let the "/" be inserted and rendered
+          setTimeout(() => startCompletion(view), 20);
           return true;
         }
         return false;

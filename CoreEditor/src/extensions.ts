@@ -1,6 +1,6 @@
 /**
  * CodeMirror 6 extensions for Markdown editing
- * Includes language support, keybindings, and line wrapping
+ * Includes language support, keybindings, line wrapping, command palette, and code intelligence
  */
 
 import { markdown } from '@codemirror/lang-markdown';
@@ -13,8 +13,10 @@ import {
 import { Extension, Prec } from '@codemirror/state';
 import { EditorView, keymap, lineNumbers, highlightActiveLine, highlightActiveLineGutter, drawSelection, dropCursor, rectangularSelection, crosshairCursor } from '@codemirror/view';
 import { defaultKeymap, history, historyKeymap, indentWithTab } from '@codemirror/commands';
-import { closeBrackets, closeBracketsKeymap } from '@codemirror/autocomplete';
+import { closeBrackets, closeBracketsKeymap, autocompletion } from '@codemirror/autocomplete';
 import { searchKeymap, highlightSelectionMatches } from '@codemirror/search';
+import { slashCommandCompletion, slashCommandKeymap, commandPaletteThemes } from './commands';
+import { syntaxHiding } from './syntaxHiding';
 
 /**
  * Create Markdown language support
@@ -37,6 +39,19 @@ export function createMarkdownKeymap(): Extension {
   ]);
   
   return Prec.high(markdownKeys);
+}
+
+/**
+ * Create unified autocompletion with slash commands and code intelligence
+ */
+export function createAutocompletion(): Extension {
+  return autocompletion({
+    override: [slashCommandCompletion],
+    defaultKeymap: true,
+    icons: false,
+    closeOnBlur: true,
+    optionClass: () => 'cm-completion-item'
+  });
 }
 
 /**
@@ -76,6 +91,10 @@ export function createMarkdownExtensions(): Extension[] {
   return [
     ...createBaseExtensions(),
     createMarkdownLanguage(),
-    createMarkdownKeymap()
+    createMarkdownKeymap(),
+    createAutocompletion(),
+    slashCommandKeymap(),
+    ...commandPaletteThemes(),
+    syntaxHiding()
   ];
 }

@@ -97,6 +97,40 @@ await bridge.redo()
 | `⌘Z` | Undo |
 | `⌘⇧Z` | Redo |
 
+### Slash Command Palette
+
+Type `/` at the start of a line or after a space to open the command palette. Available commands:
+
+| Command | Description |
+|---------|-------------|
+| `/bold` | Make text bold (⌘B) |
+| `/italic` | Make text italic (⌘I) |
+| `/code` | Inline code (⌘`) |
+| `/h1`, `/h2`, `/h3` | Headings |
+| `/bullet` | Bullet list |
+| `/numbered` | Numbered list |
+| `/todo` | Task list checkbox |
+| `/quote` | Blockquote |
+| `/codeblock` | Fenced code block |
+| `/link` | Insert link (⌘K) |
+| `/image` | Insert image (⌘⇧K) |
+| `/table` | Insert 3x3 table |
+| `/divider` | Horizontal rule |
+| `/javascript`, `/typescript`, `/python`, `/swift`, etc. | Language-specific code blocks |
+
+### Code Intelligence
+
+Inside fenced code blocks, you get language-specific autocompletion:
+
+- **JavaScript/TypeScript**: Keywords, built-in objects, snippets (`fn`, `arrow`, `ifc`, `forc`, etc.)
+- **Python**: Keywords, built-in functions, snippets (`defn`, `classc`, `ifc`, etc.)
+- **Swift**: Keywords, types, SwiftUI helpers (`func`, `guardc`, `iflet`, `@state`, etc.)
+- **HTML/CSS**: Elements, properties, common patterns
+- **Bash**: Shell keywords and commands
+
+Press `Tab` to expand snippets with placeholders.
+
+
 ## Development
 
 ### Build JavaScript Bundle
@@ -129,7 +163,10 @@ MarkdownEditor/
 │   │   ├── editor.ts           # Main entry point
 │   │   ├── bridge.ts           # Swift ↔ JS communication
 │   │   ├── themes.ts           # Light/dark themes
-│   │   └── extensions.ts       # Markdown language support
+│   │   ├── extensions.ts       # Markdown language support
+│   │   ├── commands.ts         # Slash command palette
+│   │   └── codeIntelligence.ts # Code block autocompletion
+│   ├── index.html              # Dev server entry
 │   └── package.json
 ├── Sources/MarkdownEditor/
 │   ├── EditorWebView.swift     # NSViewRepresentable wrapper

@@ -29,6 +29,28 @@ const baseTheme = EditorView.baseTheme({
   '.cm-scroller': {
     overflow: 'auto',
     fontFamily: 'inherit'
+  },
+  // Gutter (Line Numbers) Styling
+  '.cm-gutters': {
+    backgroundColor: 'var(--gutter-bg, transparent)',
+    borderRight: 'none',
+    color: 'var(--gutter-color, #999)',
+    fontFamily: 'inherit',
+    lineHeight: '1.8' // Match line height of content
+  },
+  '.cm-gutterElement': {
+    display: 'flex !important',
+    alignItems: 'center',
+    justifyContent: 'flex-end',
+    fontSize: '0.85em',
+    opacity: '0.6',
+    transition: 'opacity 0.2s, color 0.2s',
+  },
+  '.cm-activeLineGutter': {
+    backgroundColor: 'transparent !important',
+    color: 'var(--accent-color, #007aff)',
+    opacity: '1',
+    fontWeight: '600'
   }
 });
 

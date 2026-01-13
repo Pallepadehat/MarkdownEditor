@@ -38,6 +38,7 @@ function debounceContentChange(content: string): void {
   }, 100);
 }
 
+/** Global Command Palette instance */
 let commandPalette: CommandPalette | null = null;
 
 /**

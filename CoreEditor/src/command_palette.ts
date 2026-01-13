@@ -1,3 +1,15 @@
+/**
+ * Custom Command Palette Implementation
+ * 
+ * Replaces the default CodeMirror autocomplete to provide a premium, macOS-native feel.
+ * It renders a custom absolute overlay that is positioned near the cursor.
+ * 
+ * Key Features:
+ * - Capture Phase Event Handling: Intercepts Arrow/Enter/Esc keys before CodeMirror does.
+ * - Dynamic Theme Support: Syncs with editor's light/dark mode.
+ * - Auto-Dismiss: Closes if the trigger character '/' is deleted.
+ */
+
 import { EditorView } from '@codemirror/view';
 
 export interface CommandItem {
@@ -52,6 +64,9 @@ export class CommandPalette {
   private renderItems: CommandItem[] = [];
   private triggerPos: number = 0;
 
+  /**
+   * @param view - The CodeMirror editor view instance
+   */
   constructor(view: EditorView) {
     this.view = view;
     this.element = document.createElement('div');

@@ -22,5 +22,9 @@ let package = Package(
                 .copy("Resources/editor.js")
             ]
         ),
+        .testTarget(
+            name: "MarkdownEditorTests",
+            dependencies: ["MarkdownEditor"]
+        ),
     ]
 )

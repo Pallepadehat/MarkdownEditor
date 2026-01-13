@@ -1,13 +1,44 @@
 import SwiftUI
 import WebKit
 
-/// Configuration for the Markdown editor
+// MARK: - EditorConfiguration
+
+/// Configuration options for customizing the Markdown editor appearance.
+///
+/// Use this to customize font size, font family, line height, and
+/// whether to show line numbers.
+///
+/// ## Example
+/// ```swift
+/// let config = EditorConfiguration(
+///     fontSize: 16,
+///     fontFamily: "Menlo",
+///     lineHeight: 1.8,
+///     showLineNumbers: true
+/// )
+///
+/// EditorWebView(text: $markdown, configuration: config)
+/// ```
 public struct EditorConfiguration: Sendable {
+    /// The font size in points.
     public var fontSize: CGFloat
+    
+    /// The CSS font-family string.
     public var fontFamily: String
+    
+    /// The line height multiplier (e.g., 1.6 for 160%).
     public var lineHeight: CGFloat
+    
+    /// Whether to show line numbers in the gutter.
     public var showLineNumbers: Bool
     
+    /// Creates a new editor configuration.
+    ///
+    /// - Parameters:
+    ///   - fontSize: The font size in points. Default is 15.
+    ///   - fontFamily: The CSS font-family string. Default is system monospace.
+    ///   - lineHeight: The line height multiplier. Default is 1.6.
+    ///   - showLineNumbers: Whether to show line numbers. Default is true.
     public init(
         fontSize: CGFloat = 15,
         fontFamily: String = "-apple-system, BlinkMacSystemFont, 'SF Mono', Menlo, Monaco, monospace",
@@ -20,22 +51,72 @@ public struct EditorConfiguration: Sendable {
         self.showLineNumbers = showLineNumbers
     }
     
+    /// The default editor configuration.
     public static let `default` = EditorConfiguration()
 }
 
-/// SwiftUI view wrapper for the CodeMirror 6 Markdown editor
+// MARK: - EditorWebView
+
+/// A SwiftUI view that displays a CodeMirror 6 Markdown editor.
+///
+/// `EditorWebView` wraps a WKWebView containing a CodeMirror 6 editor
+/// configured for Markdown editing. It provides:
+/// - Two-way binding with SwiftUI state
+/// - Automatic light/dark theme switching
+/// - Syntax highlighting for Markdown
+/// - Keyboard shortcuts for formatting
+///
+/// ## Basic Usage
+/// ```swift
+/// struct ContentView: View {
+///     @State private var markdown = "# Hello, World!"
+///
+///     var body: some View {
+///         EditorWebView(text: $markdown)
+///     }
+/// }
+/// ```
+///
+/// ## With Configuration
+/// ```swift
+/// EditorWebView(
+///     text: $markdown,
+///     configuration: EditorConfiguration(fontSize: 18),
+///     onReady: {
+///         print("Editor is ready!")
+///     }
+/// )
+/// ```
+///
+/// ## Accessing the Bridge
+/// For programmatic control, use the coordinator's bridge:
+/// ```swift
+/// // The bridge is available after editor is ready
+/// await coordinator.bridge.toggleBold()
+/// ```
 public struct EditorWebView: NSViewRepresentable {
     
     // MARK: - Properties
     
+    /// Binding to the Markdown content.
     @Binding public var text: String
+    
+    /// Configuration for editor appearance.
     public var configuration: EditorConfiguration
+    
+    /// Callback when the editor is ready for interaction.
     public var onReady: (() -> Void)?
     
     @Environment(\.colorScheme) private var colorScheme
     
     // MARK: - Initialization
     
+    /// Creates a new Markdown editor view.
+    ///
+    /// - Parameters:
+    ///   - text: Binding to the Markdown content string.
+    ///   - configuration: Configuration for editor appearance. Default is `.default`.
+    ///   - onReady: Optional callback when the editor is ready.
     public init(
         text: Binding<String>,
         configuration: EditorConfiguration = .default,
@@ -114,7 +195,6 @@ public struct EditorWebView: NSViewRepresentable {
                 with: "data-theme=\"\(theme.rawValue)\""
             )
             
-            // Load the HTML
             webView.loadHTMLString(htmlContent, baseURL: htmlURL.deletingLastPathComponent())
         } catch {
             print("[EditorWebView] Failed to load editor.html: \(error)")
@@ -123,9 +203,12 @@ public struct EditorWebView: NSViewRepresentable {
     
     // MARK: - Coordinator
     
+    /// Coordinator that manages the bridge and handles editor events.
     @MainActor
     public final class Coordinator: NSObject, EditorBridgeDelegate {
-        let bridge = EditorBridge()
+        /// The bridge for programmatic editor control.
+        public let bridge = EditorBridge()
+        
         var textBinding: Binding<String>?
         var onReady: (() -> Void)?
         var initialContent: String = ""
@@ -145,7 +228,6 @@ public struct EditorWebView: NSViewRepresentable {
         }
         
         public func editorDidBecomeReady() {
-            // Set initial content when editor is ready
             if !initialContent.isEmpty {
                 Task { @MainActor in
                     await bridge.setContent(initialContent)

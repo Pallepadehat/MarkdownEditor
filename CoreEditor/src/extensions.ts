@@ -1,6 +1,5 @@
 /**
  * CodeMirror 6 extensions for Markdown editing
- * Includes language support, keybindings, line wrapping, command palette, and code intelligence
  */
 
 import { markdown } from '@codemirror/lang-markdown';

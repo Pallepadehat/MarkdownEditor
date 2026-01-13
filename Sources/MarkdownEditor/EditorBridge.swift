@@ -389,6 +389,21 @@ public final class EditorBridge: NSObject {
         _ = try? await webView.evaluateJavaScript("window.editorAPI.setFontFamily(\"\(family)\")")
     }
     
+    /// Updates the editor configuration.
+    ///
+    /// - Parameter config: The configuration to apply.
+    public func updateConfiguration(_ config: EditorConfiguration) async {
+        guard let webView, isReady else { return }
+        
+        guard let data = try? JSONEncoder().encode(config),
+              let json = String(data: data, encoding: .utf8) else {
+            return
+        }
+        
+        // Pass JSON object directly to the API
+        _ = try? await webView.evaluateJavaScript("window.editorAPI.updateConfiguration(\(json))")
+    }
+    
     // MARK: - Private Helpers
     
     private func executeCommand(_ command: String) async {

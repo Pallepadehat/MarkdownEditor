@@ -2,7 +2,7 @@ import { Extension, StateField, RangeSetBuilder } from '@codemirror/state';
 import { EditorView, Decoration, DecorationSet, WidgetType } from '@codemirror/view';
 import { syntaxTree } from '@codemirror/language';
 
-// En widget der viser sprognavnet pænt (Premium Badge)
+// Widget for showing language name (Premium Badge)
 class LanguageBadge extends WidgetType {
   constructor(readonly label: string) { super() }
   
@@ -34,9 +34,7 @@ const hideSyntaxField = StateField.define<DecorationSet>({
     const selection = tr.state.selection.main;
     const cursorLine = tr.state.doc.lineAt(selection.from).number;
     
-    // We need to collect decorations and sort them because tree iteration
-    // might visit parent nodes (adding line decorations) before children nodes (adding replace decorations)
-    // and RangeSetBuilder requires strict ordering.
+    // Collect and sort decorations to satisfy RangeSetBuilder requirements
     interface DecoSpec {
       from: number;
       to: number;

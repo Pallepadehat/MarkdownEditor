@@ -1,193 +1,66 @@
 # MarkdownEditor
 
-A **CodeMirror 6-based Markdown editor** for macOS, packaged as a Swift Package. Built with native SwiftUI integration and bidirectional text binding.
-
-[![Swift 6.0](https://img.shields.io/badge/Swift-6.0-orange.svg)](https://swift.org)
-[![macOS 14+](https://img.shields.io/badge/macOS-14+-blue.svg)](https://developer.apple.com/macos/)
-[![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
+A premium, native-feeling Markdown editor component for iOS and macOS, powered by CodeMirror 6 and SwiftUI.
 
 ## Features
 
-- **Syntax Highlighting** — Headers, bold, italic, links, and code blocks
-- **Auto Theme Switching** — Follows system light/dark mode
-- **Keyboard Shortcuts** — Cmd+B, Cmd+I, Cmd+K, and more
-- **Two-Way Binding** — SwiftUI `@Binding` integration
-- **Fast & Lightweight** — CodeMirror 6 under the hood
-- **Tested** — Unit tests included
+- **Native Aesthetics**: Designed to look and feel like a first-party tool, featuring an Xcode-inspired theme (`@uiw/codemirror-theme-xcode`).
+- **Linear Syntax Hiding**: Markdown markers (like `**`, `#`) are hidden on inactive lines for a clean reading experience but reappear instantly when editing.
+- **Premium Code Blocks**: Code blocks are styled with language badges and distinct backgrounds, supporting syntax highlighting for dozens of languages (Swift, TypeScript, PHP, etc.).
+- **Typesafe Configuration**: Fully configurable from Swift via a typesafe API (fonts, line numbers, wrapping, themes).
+- **Lightweight**: heavy code intelligence features have been removed to focus on a fast, distraction-free writing environment.
 
 ## Installation
 
-Add the package to your project using Swift Package Manager:
+### Swift Package Manager
+
+Add `MarkdownEditor` to your project via Xcode or `Package.swift`.
+
+## Usage
 
 ```swift
-dependencies: [
-    .package(path: "../MarkdownEditor")
-]
-```
-
-Or in Xcode: **File → Add Package Dependencies** → Add local package.
-
-## Quick Start
-
-```swift
-import SwiftUI
 import MarkdownEditor
+import SwiftUI
 
 struct ContentView: View {
-    @State private var markdown = "# Hello, World!"
-    
+    @State private var text = "# Hello World"
+
     var body: some View {
-        EditorWebView(text: $markdown)
+        MarkdownEditor(text: $text)
+            .fontSize(16)
+            .theme(.light)
+            .onAppear {
+                // Editor ready
+            }
     }
 }
 ```
 
-## API Reference
+## Contributing
 
-### EditorWebView
+We welcome contributions! This project uses `bun` for the JavaScript core.
 
-The main SwiftUI view for the editor.
+### Prerequisites
 
-```swift
-EditorWebView(
-    text: $markdown,                          // Required: Binding<String>
-    configuration: .default,                  // Optional: EditorConfiguration
-    onReady: { print("Editor ready!") }       // Optional: Callback
-)
-```
+- [Bun](https://bun.sh)
+- Xcode 15+
 
-### EditorConfiguration
+### Development
 
-Customize the editor appearance:
-
-```swift
-let config = EditorConfiguration(
-    fontSize: 16,
-    fontFamily: "Menlo",
-    lineHeight: 1.8,
-    showLineNumbers: true
-)
-```
-
-### Formatting Commands
-
-Access the bridge for programmatic formatting:
-
-```swift
-// Via EditorBridge
-let bridge = EditorBridge()
-await bridge.toggleBold()        // **text**
-await bridge.toggleItalic()      // *text*
-await bridge.toggleCode()        // `text`
-await bridge.insertLink(url: "https://example.com", title: "Example")
-await bridge.insertHeading(level: 2)
-await bridge.undo()
-await bridge.redo()
-```
-
-### Keyboard Shortcuts
-
-| Shortcut | Action |
-|----------|--------|
-| `⌘B` | Toggle bold |
-| `⌘I` | Toggle italic |
-| `⌘K` | Insert link |
-| `⌘⇧K` | Insert image |
-| `⌘`` ` `` | Toggle inline code |
-| `⌘Z` | Undo |
-| `⌘⇧Z` | Redo |
-
-### Slash Command Palette
-
-Type `/` at the start of a line or after a space to open the command palette. Available commands:
-
-| Command | Description |
-|---------|-------------|
-| `/bold` | Make text bold (⌘B) |
-| `/italic` | Make text italic (⌘I) |
-| `/code` | Inline code (⌘`) |
-| `/h1`, `/h2`, `/h3` | Headings |
-| `/bullet` | Bullet list |
-| `/numbered` | Numbered list |
-| `/todo` | Task list checkbox |
-| `/quote` | Blockquote |
-| `/codeblock` | Fenced code block |
-| `/link` | Insert link (⌘K) |
-| `/image` | Insert image (⌘⇧K) |
-| `/table` | Insert 3x3 table |
-| `/divider` | Horizontal rule |
-| `/javascript`, `/typescript`, `/python`, `/swift`, etc. | Language-specific code blocks |
-
-### Code Intelligence
-
-Inside fenced code blocks, you get language-specific autocompletion:
-
-- **JavaScript/TypeScript**: Keywords, built-in objects, snippets (`fn`, `arrow`, `ifc`, `forc`, etc.)
-- **Python**: Keywords, built-in functions, snippets (`defn`, `classc`, `ifc`, etc.)
-- **Swift**: Keywords, types, SwiftUI helpers (`func`, `guardc`, `iflet`, `@state`, etc.)
-- **HTML/CSS**: Elements, properties, common patterns
-- **Bash**: Shell keywords and commands
-
-Press `Tab` to expand snippets with placeholders.
-
-
-## Development
-
-### Build JavaScript Bundle
-
-```bash
-cd CoreEditor
-bun install
-bun run build
-```
-
-### Build Swift Package
-
-```bash
-swift build
-```
-
-### Run Tests
-
-```bash
-swift test
-```
-
-## Project Structure
-
-```
-MarkdownEditor/
-├── Package.swift
-├── CoreEditor/                 # TypeScript source
-│   ├── src/
-│   │   ├── editor.ts           # Main entry point
-│   │   ├── bridge.ts           # Swift ↔ JS communication
-│   │   ├── themes.ts           # Light/dark themes
-│   │   ├── extensions.ts       # Markdown language support
-│   │   ├── commands.ts         # Slash command palette
-│   │   └── codeIntelligence.ts # Code block autocompletion
-│   ├── index.html              # Dev server entry
-│   └── package.json
-├── Sources/MarkdownEditor/
-│   ├── EditorWebView.swift     # NSViewRepresentable wrapper
-│   ├── EditorBridge.swift      # WKWebView bridge
-│   └── Resources/
-│       ├── editor.html
-│       └── editor.js           # Bundled output
-└── Tests/
-    └── MarkdownEditorTests/
-```
-
-## Requirements
-
-- macOS 14.0+
-- Swift 6.0+
-- Xcode 16+
+1.  Navigate to the core editor:
+    ```bash
+    cd CoreEditor
+    ```
+2.  Install dependencies:
+    ```bash
+    bun install
+    ```
+3.  Build the editor bundle:
+    ```bash
+    bun run build
+    ```
+    The output is generated in `../Sources/MarkdownEditor/Resources/editor.js`.
 
 ## License
 
-MIT License — see [LICENSE](LICENSE) for details.
-
----
-
-Built with ❤️ using [CodeMirror 6](https://codemirror.net/).
+MIT

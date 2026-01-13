@@ -1,6 +1,5 @@
 /**
  * Bridge module for Swift ↔ JavaScript communication
- * Uses WKWebView's webkit.messageHandlers for sending messages to Swift
  */
 
 declare global {
@@ -76,9 +75,7 @@ export interface EditorMessage {
   payload?: unknown;
 }
 
-/**
- * Send a message to Swift via WKWebView bridge
- */
+// Send message to Swift
 export function postMessage(message: EditorMessage): void {
   if (window.webkit?.messageHandlers?.editor) {
     window.webkit.messageHandlers.editor.postMessage(message);
@@ -88,9 +85,7 @@ export function postMessage(message: EditorMessage): void {
   }
 }
 
-/**
- * Notify Swift that content has changed
- */
+// Notify Swift that content has changed
 export function notifyContentChanged(content: string): void {
   postMessage({
     type: 'contentChanged',

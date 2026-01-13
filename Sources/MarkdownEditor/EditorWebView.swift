@@ -19,7 +19,7 @@ import WebKit
 ///
 /// EditorWebView(text: $markdown, configuration: config)
 /// ```
-public struct EditorConfiguration: Sendable {
+public struct EditorConfiguration: Codable, Equatable, Sendable {
     /// The font size in points.
     public var fontSize: CGFloat
     
@@ -32,6 +32,9 @@ public struct EditorConfiguration: Sendable {
     /// Whether to show line numbers in the gutter.
     public var showLineNumbers: Bool
     
+    /// Whether to wrap long lines.
+    public var wrapLines: Bool
+    
     /// Creates a new editor configuration.
     ///
     /// - Parameters:
@@ -43,12 +46,14 @@ public struct EditorConfiguration: Sendable {
         fontSize: CGFloat = 15,
         fontFamily: String = "-apple-system, BlinkMacSystemFont, 'SF Mono', Menlo, Monaco, monospace",
         lineHeight: CGFloat = 1.6,
-        showLineNumbers: Bool = true
+        showLineNumbers: Bool = true,
+        wrapLines: Bool = true
     ) {
         self.fontSize = fontSize
         self.fontFamily = fontFamily
         self.lineHeight = lineHeight
         self.showLineNumbers = showLineNumbers
+        self.wrapLines = wrapLines
     }
     
     /// The default editor configuration.
@@ -161,6 +166,14 @@ public struct EditorWebView: NSViewRepresentable {
             }
         }
         
+        // Update configuration if changed
+        if coordinator.currentConfiguration != configuration {
+            coordinator.currentConfiguration = configuration
+            Task { @MainActor in
+                await coordinator.bridge.updateConfiguration(configuration)
+            }
+        }
+        
         // Update content if changed externally (not from editor)
         if text != coordinator.lastKnownContent && !coordinator.isUpdatingBinding {
             coordinator.lastKnownContent = text
@@ -214,6 +227,7 @@ public struct EditorWebView: NSViewRepresentable {
         var initialContent: String = ""
         var lastKnownContent: String = ""
         var currentTheme: EditorTheme = .light
+        var currentConfiguration: EditorConfiguration = .default
         var isUpdatingBinding = false
         
         // MARK: - EditorBridgeDelegate

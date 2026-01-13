@@ -1,6 +1,6 @@
 /**
  * Main editor entry point
- * Initializes CodeMirror 6 with Markdown support and exposes API to Swift
+ * Initializes CodeMirror 6 and exposes API to Swift
  */
 
 import { EditorState, Compartment } from '@codemirror/state';

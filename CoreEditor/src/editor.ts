@@ -15,6 +15,7 @@ import {
   notifyReady, 
   notifyFocus 
 } from './bridge';
+import { CommandPalette } from './command_palette';
 
 // Compartments for dynamic reconfiguration
 const themeCompartment = new Compartment();
@@ -36,6 +37,8 @@ function debounceContentChange(content: string): void {
     contentChangeTimeout = null;
   }, 100);
 }
+
+let commandPalette: CommandPalette | null = null;
 
 /**
  * Initialize the editor
@@ -89,7 +92,10 @@ function initEditor(container: HTMLElement, initialContent: string = '', theme: 
         if (update.focusChanged) {
           notifyFocus(update.view.hasFocus);
         }
-      })
+        
+        commandPalette?.handleUpdate(update);
+      }),
+
     ]
   });
   
@@ -97,8 +103,13 @@ function initEditor(container: HTMLElement, initialContent: string = '', theme: 
     state,
     parent: container
   });
+
+  commandPalette = new CommandPalette(editorView);
+  commandPalette.setTheme(theme);
   
   return editorView;
+  
+
 }
 
 /**
@@ -166,7 +177,8 @@ function insertAtLineStart(prefix: string): void {
   const line = editorView.state.doc.lineAt(from);
   
   editorView.dispatch({
-    changes: { from: line.from, to: line.from, insert: prefix }
+    changes: { from: line.from, to: line.from, insert: prefix },
+    selection: { anchor: from + prefix.length } 
   });
 }
 
@@ -294,6 +306,7 @@ const editorAPI: EditorAPI = {
     // Theme
     if (config.theme) {
       effects.push(themeCompartment.reconfigure(getThemeExtension(config.theme)));
+      commandPalette?.setTheme(config.theme);
     }
     
     // Styles (Font size, family, line height)

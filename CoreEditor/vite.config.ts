@@ -5,7 +5,7 @@ export default defineConfig(({ command }) => ({
   plugins: command === 'build' ? [viteSingleFile()] : [],
   server: {
     port: 5173,
-    open: true
+    open: '/editor.html'
   },
   build: {
     outDir: '../Sources/MarkdownEditor/Resources',

@@ -16,7 +16,7 @@ import { EditorView, keymap, highlightActiveLine, highlightActiveLineGutter, dra
 import { defaultKeymap, history, historyKeymap, indentWithTab } from '@codemirror/commands';
 import { closeBrackets, closeBracketsKeymap, autocompletion } from '@codemirror/autocomplete';
 import { searchKeymap, highlightSelectionMatches } from '@codemirror/search';
-import { slashCommandCompletion, slashCommandKeymap, commandPaletteThemes } from './commands';
+import { commandPaletteThemes } from './commands';
 import { stylingExtension } from './styling';
 import { toggleBold, toggleItalic, toggleList, toggleOrderedList, cycleTodo } from './formatting';
 
@@ -57,7 +57,7 @@ export function createMarkdownKeymap(): Extension {
  */
 export function createAutocompletion(): Extension {
   return autocompletion({
-    override: [slashCommandCompletion],
+    override: [],
     defaultKeymap: true,
     icons: false,
     closeOnBlur: true,
@@ -104,7 +104,7 @@ export function createMarkdownExtensions(): Extension[] {
     createMarkdownLanguage(),
     createMarkdownKeymap(),
     createAutocompletion(),
-    slashCommandKeymap(),
+    // slashCommandKeymap removed, handled by command_palette.ts
     ...commandPaletteThemes(),
     stylingExtension
   ];

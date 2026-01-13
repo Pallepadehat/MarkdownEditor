@@ -293,51 +293,53 @@ export function slashCommandCompletion(context: CompletionContext): CompletionRe
 // Custom styling for the command palette
 const commandPaletteTheme = EditorView.baseTheme({
   '.cm-tooltip.cm-tooltip-autocomplete': {
-    border: '0.5px solid var(--border-color)',
-    borderRadius: '10px',
-    boxShadow: '0 8px 24px rgba(0, 0, 0, 0.12), 0 2px 8px rgba(0,0,0,0.04)', // Softer, more diffuse shadow
+    border: '0.5px solid var(--border-color)', // Reverting to thinner border for elegance
+    borderRadius: '12px',
+    boxShadow: '0 12px 40px rgba(0, 0, 0, 0.25), 0 0 0 0.5px rgba(255,255,255,0.1)', // Richer shadow
     backgroundColor: 'var(--tooltip-bg)',
-    backdropFilter: 'blur(24px) saturate(180%)', // Standard macOS glass effect
-    '-webkit-backdrop-filter': 'blur(24px) saturate(180%)',
-    padding: '4px', // Tighter padding for outer container
-    maxHeight: '320px',
-    minWidth: '280px'
+    color: 'var(--text-color)',
+    backdropFilter: 'blur(50px) saturate(190%)', // Maximum premium blur
+    '-webkit-backdrop-filter': 'blur(50px) saturate(190%)',
+    padding: '6px',
+    maxHeight: '400px', // Allow it to be taller
+    minWidth: '320px',
+    animation: 'cm-tooltip-fade 0.2s cubic-bezier(0.16, 1, 0.3, 1)', // Apple-style spring
+    transform: 'translateY(6px)'
+  },
+  '@keyframes cm-tooltip-fade': {
+    '0%': { opacity: '0', transform: 'translateY(4px) scale(0.98)' },
+    '100%': { opacity: '1', transform: 'translateY(6px) scale(1)' }
   },
   '.cm-tooltip.cm-tooltip-autocomplete > ul': {
-    fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", sans-serif',
-    fontSize: '13px',
-    maxHeight: '310px',
-    gap: '1px', // Tiny gap between items
+    fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", sans-serif',
+    fontSize: '13.5px', // Slightly larger font
+    fontWeight: '400',
+    maxHeight: '388px',
+    gap: '2px',
     display: 'flex',
     flexDirection: 'column',
     listStyle: 'none',
     margin: '0',
-    padding: '0 4px 4px 4px' // Padding inside the scrollable area
+    padding: '0'
   },
   '.cm-tooltip.cm-tooltip-autocomplete > ul > li': {
-    padding: '6px 10px 6px 8px', // Balanced padding
-    borderRadius: '6px', // Slightly smaller radius for items
+    padding: '0 12px', // Horizontal padding
+    borderRadius: '8px',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'space-between',
-    transition: 'background-color 0s', // Instant selection change is more native-like
+    transition: 'none',
     margin: '0',
-    lineHeight: '1.4',
-    minHeight: '26px',
+    lineHeight: '36px', // Fixed height centering
+    minHeight: '36px', // Taller, more premium touch target
     cursor: 'default'
   },
-  '.cm-tooltip.cm-tooltip-autocomplete > ul > li[aria-selected]': {
-    backgroundColor: 'var(--selection-bg)',
-    color: 'var(--selection-text)'
-  },
   '.cm-completionLabel': {
-    fontWeight: '400', // Normal weight looks cleaner
-    fontSize: '13.5px', // Slightly larger for readability
+    fontWeight: '400',
+    fontSize: '13.5px',
     flex: '0 0 auto',
-    letterSpacing: '-0.01em'
-  },
-  '.cm-tooltip.cm-tooltip-autocomplete > ul > li[aria-selected] .cm-completionLabel': {
-    fontWeight: '500' // Slight bold on selection
+    letterSpacing: '0.01em',
+    lineHeight: '1' // clear line-height inheritance
   },
   '.cm-completionDetail': {
     color: 'var(--detail-color)',
@@ -345,8 +347,11 @@ const commandPaletteTheme = EditorView.baseTheme({
     marginLeft: '12px',
     flex: '1 1 auto',
     textAlign: 'right',
-    opacity: '0.7',
-    fontVariantNumeric: 'tabular-nums'
+    opacity: '0.6',
+    fontVariantNumeric: 'tabular-nums',
+    fontWeight: '400',
+    letterSpacing: '0',
+    lineHeight: '1'
   },
   '.cm-tooltip.cm-tooltip-autocomplete > ul > li[aria-selected] .cm-completionDetail': {
     color: 'rgba(255,255,255,0.85)',
@@ -362,19 +367,21 @@ const commandPaletteTheme = EditorView.baseTheme({
   },
   // Section headers
   '.cm-completionSection': {
-    padding: '8px 10px 4px',
-    fontSize: '10px',
+    padding: '8px 4px 4px 4px', // Flush left (Minimal gap)
+    fontSize: '11px',
     fontWeight: '600',
     color: 'var(--section-color)',
     textTransform: 'uppercase',
-    letterSpacing: '0.6px',
+    letterSpacing: '0.8px',
     marginTop: '6px',
     marginBottom: '2px',
-    borderTop: '1px solid var(--divider-color)'
+    borderTop: '1px solid var(--divider-color)',
+    opacity: '0.8'
   },
   '.cm-completionSection:first-child': {
-    marginTop: '2px',
-    borderTop: 'none'
+    marginTop: '0px',
+    borderTop: 'none',
+    paddingTop: '6px'
   },
   // Scrollbar styling
   '.cm-tooltip.cm-tooltip-autocomplete > ul::-webkit-scrollbar': {
@@ -394,30 +401,33 @@ const commandPaletteTheme = EditorView.baseTheme({
 // Dark theme overrides
 const commandPaletteDarkTheme = EditorView.theme({
   '.cm-tooltip.cm-tooltip-autocomplete': {
-    '--tooltip-bg': 'rgba(30, 30, 30, 0.75)', // More translucent
-    '--border-color': 'rgba(255,255,255,0.12)',
-    '--selection-bg': '#0061e8', // System Blue
+    '--tooltip-bg': 'rgba(35, 35, 40, 0.72)',
+    '--border-color': 'rgba(255,255,255,0.1)',
+    '--text-color': '#ffffff',
+    '--selection-bg': 'rgba(255, 255, 255, 0.1)', // Secondary/Neutral (Minimalist)
     '--selection-text': '#ffffff',
-    '--detail-color': 'rgba(235, 235, 245, 0.6)',
-    '--section-color': 'rgba(235, 235, 245, 0.4)',
-    '--divider-color': 'rgba(84, 84, 88, 0.5)',
-    '--accent-color': '#0a84ff',
-    '--scrollbar-thumb': 'rgba(255, 255, 255, 0.3)'
+    '--detail-color': 'rgba(255, 255, 255, 0.55)',
+    '--section-color': 'rgba(255, 255, 255, 0.5)',
+    '--divider-color': 'rgba(84, 84, 88, 0.4)',
+    '--accent-color': '#ffffff',
+    '--scrollbar-thumb': 'rgba(255, 255, 255, 0.2)'
   }
 }, { dark: true });
+
 
 // Light theme overrides
 const commandPaletteLightTheme = EditorView.theme({
   '.cm-tooltip.cm-tooltip-autocomplete': {
-    '--tooltip-bg': 'rgba(255, 255, 255, 0.85)',
-    '--border-color': 'rgba(0,0,0,0.1)', // Subtle border
-    '--selection-bg': '#007AFF',
-    '--selection-text': '#ffffff',
-    '--detail-color': 'rgba(60, 60, 67, 0.6)',
-    '--section-color': 'rgba(60, 60, 67, 0.4)',
+    '--tooltip-bg': 'rgba(255, 255, 255, 0.72)',
+    '--border-color': 'rgba(0,0,0,0.08)',
+    '--text-color': '#000000',
+    '--selection-bg': 'rgba(0, 0, 0, 0.05)', // Secondary/Neutral (Minimalist)
+    '--selection-text': '#000000',
+    '--detail-color': 'rgba(60, 60, 67, 0.55)',
+    '--section-color': 'rgba(60, 60, 67, 0.5)',
     '--divider-color': 'rgba(60, 60, 67, 0.1)',
-    '--accent-color': '#007AFF', // System Blue
-    '--scrollbar-thumb': 'rgba(0, 0, 0, 0.2)'
+    '--accent-color': '#000000',
+    '--scrollbar-thumb': 'rgba(0, 0, 0, 0.15)'
   }
 }, { dark: false });
 

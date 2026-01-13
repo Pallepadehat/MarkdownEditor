@@ -22,21 +22,46 @@ const baseTheme = EditorView.baseTheme({
     padding: '0 4px',
     lineHeight: '1.8'
   },
+  '.cm-codeblock-line': {
+    backgroundColor: 'var(--code-block-bg)',
+    paddingLeft: '12px' // Add some padding for the code content
+  },
   '.cm-scroller': {
     overflow: 'auto',
     fontFamily: 'inherit'
   }
 });
 
+// Theme variables for specific components (code blocks, badges)
+const lightThemeVars = EditorView.theme({
+  "&": {
+    "--code-block-bg": "#f5f5f7",
+    "--badge-color": "#8e8e93",
+    "--badge-border": "#d1d1d6",
+    "--badge-bg": "#ffffff"
+  }
+}, { dark: false });
+
+const darkThemeVars = EditorView.theme({
+  "&": {
+    "--code-block-bg": "#1e1e24", 
+    "--badge-color": "#a1a1aa",
+    "--badge-border": "#3f3f46",
+    "--badge-bg": "#27272a"
+  }
+}, { dark: true });
+
 // Exported theme extensions
 export const lightThemeExtension: Extension = [
   baseTheme,
-  xcodeLight
+  xcodeLight,
+  lightThemeVars
 ];
 
 export const darkThemeExtension: Extension = [
   baseTheme,
-  xcodeDark
+  xcodeDark,
+  darkThemeVars
 ];
 
 export function getThemeExtension(theme: 'light' | 'dark'): Extension {

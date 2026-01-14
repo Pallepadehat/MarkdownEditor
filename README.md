@@ -33,12 +33,20 @@ In your Xcode project settings (Signing & Capabilities):
 2.  **Outgoing Connections (Client)**: ✅ **Check this**. This is **mandatory** for `WKWebView`, even for local content, as it's required for XPC communication with the WebContent process.
 3.  **Allow Execution of JIT-compiled Code**: ✅ **Check this** (under Hardened Runtime). This allows `WKWebView` to use its optimized JavaScript engine.
 
-### Troubleshooting Sandbox Violations
+### Troubleshooting Sandbox Logs
 
-If you see logs like `XPC_ERROR_CONNECTION_INVALID` or `Sandbox restriction` related to `launchservicesd` or `pboard`:
-- Ensure **Outgoing Connections (Client)** is enabled.
-- Clean your build folder (`Cmd+Shift+K`) and derived data, as Xcode can sometimes cache stale entitlement signatures.
-- If distributing for the Mac App Store, ensure your **Provisioning Profile** includes these capabilities.
+If you see logs in your Xcode console like:
+- `XPC_ERROR_CONNECTION_INVALID`
+- `Connection init failed at lookup with error 159 - Sandbox restriction`
+- `Failed to set up CFPasteboardRef`
+- `networkd_settings_read_from_file Sandbox is preventing this process...`
+
+**These are usually harmless WebKit noise** caused by the isolated WebContent process verifying its own sandbox limits. However, to minimize them:
+
+1.  **Run in Release Mode**: Much of this noise is triggered by `"developerExtrasEnabled"` which is enabled by default in `DEBUG` builds to allow inspecting the web view.
+2.  **Verify Entitlements**: Double-check that **Outgoing Connections (Client)** is checked.
+3.  **Clean Build Folder**: Sometimes Xcode caches old entitlement signatures. Use `Product > Clean Build Folder` (Cmd+Shift+K).
+4.  **Ignore**: If the editor functions correctly (typing works, copy/paste works), you can safely ignore these logs. They indicate the sandbox is working correctly by denying the web process access to system resources it doesn't need (like `networkd` or global pasteboard access beyond standard edit operations).
 
 ## Usage
 

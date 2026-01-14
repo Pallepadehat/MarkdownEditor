@@ -136,6 +136,10 @@ public struct EditorWebView: NSViewRepresentable {
     
     public func makeNSView(context: Context) -> WKWebView {
         let config = WKWebViewConfiguration()
+        config.websiteDataStore = .nonPersistent()
+        config.allowsAirPlayForMediaPlayback = false
+        config.mediaTypesRequiringUserActionForPlayback = .all
+        
         #if DEBUG
         config.preferences.setValue(true, forKey: "developerExtrasEnabled")
         #endif

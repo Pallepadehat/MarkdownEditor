@@ -18,7 +18,8 @@ let package = Package(
         .target(
             name: "MarkdownEditor",
             resources: [
-                .copy("Resources/editor.html")
+                .copy("Resources/editor.html"),
+                .process("Resources/PrivacyInfo.xcprivacy")
             ]
         ),
         .testTarget(

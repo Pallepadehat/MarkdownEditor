@@ -17,9 +17,28 @@ Add MarkdownEditor to your project by adding the package dependency in your `Pac
 
 ```swift
 dependencies: [
-    .package(url: "https://github.com/your-username/MarkdownEditor.git", from: "1.0.0")
+    .package(url: "https://github.com/Pallepadehat/MarkdownEditor.git", from: "1.0.0")
 ]
 ```
+
+## Setup & App Sandbox
+
+To ensure the editor functions correctly within the macOS App Sandbox, you generally need to configure your App Target's entitlements correctly. `WKWebView` (which this package uses) runs in a separate process and requires specific permissions to communicate with the system.
+
+### Required Entitlements
+
+In your Xcode project settings (Signing & Capabilities):
+
+1.  **Incoming Connections (Server)**: ❌ **Uncheck** this unless you specifically need it for other features. It is not required for this package and often causes App Store Rejections if not justified.
+2.  **Outgoing Connections (Client)**: ✅ **Check this**. This is **mandatory** for `WKWebView`, even for local content, as it's required for XPC communication with the WebContent process.
+3.  **Allow Execution of JIT-compiled Code**: ✅ **Check this** (under Hardened Runtime). This allows `WKWebView` to use its optimized JavaScript engine.
+
+### Troubleshooting Sandbox Violations
+
+If you see logs like `XPC_ERROR_CONNECTION_INVALID` or `Sandbox restriction` related to `launchservicesd` or `pboard`:
+- Ensure **Outgoing Connections (Client)** is enabled.
+- Clean your build folder (`Cmd+Shift+K`) and derived data, as Xcode can sometimes cache stale entitlement signatures.
+- If distributing for the Mac App Store, ensure your **Provisioning Profile** includes these capabilities.
 
 ## Usage
 
@@ -62,12 +81,6 @@ EditorWebView(
     }
 )
 ```
-
-### Programmatic Control
-
-To interact with the editor programmatically (e.g., to insert text or change formatting), use the `EditorBridge` through the `EditorWebView.Coordinator`. However, looking at the current API, `EditorWebView` manages the bridge internally.
-
-*Note: Future updates will expose the bridge more directly for advanced use cases.*
 
 ## Contributing
 

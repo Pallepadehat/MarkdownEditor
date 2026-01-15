@@ -140,7 +140,3 @@ This project uses a hybrid architecture:
 ## License
 
 This project is licensed under the MIT License.
-
-```
-
-```

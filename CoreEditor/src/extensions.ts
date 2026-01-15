@@ -2,31 +2,57 @@
  * CodeMirror 6 extensions for Markdown editing
  */
 
-import { markdown } from '@codemirror/lang-markdown';
-import { languages } from '@codemirror/language-data';
-import { GFM } from '@lezer/markdown';
-import { 
+import { markdown } from "@codemirror/lang-markdown";
+import { languages } from "@codemirror/language-data";
+import { GFM } from "@lezer/markdown";
+import {
   indentOnInput,
   bracketMatching,
   foldGutter,
-  foldKeymap
-} from '@codemirror/language';
-import { Extension, Prec } from '@codemirror/state';
-import { EditorView, keymap, highlightActiveLine, highlightActiveLineGutter, drawSelection, dropCursor, rectangularSelection, crosshairCursor } from '@codemirror/view';
-import { defaultKeymap, history, historyKeymap, indentWithTab } from '@codemirror/commands';
-import { closeBrackets, closeBracketsKeymap, autocompletion } from '@codemirror/autocomplete';
-import { searchKeymap, highlightSelectionMatches } from '@codemirror/search';
+  foldKeymap,
+} from "@codemirror/language";
+import { Extension, Prec } from "@codemirror/state";
+import {
+  EditorView,
+  keymap,
+  highlightActiveLine,
+  highlightActiveLineGutter,
+  drawSelection,
+  dropCursor,
+  rectangularSelection,
+  crosshairCursor,
+} from "@codemirror/view";
+import {
+  defaultKeymap,
+  history,
+  historyKeymap,
+  indentWithTab,
+} from "@codemirror/commands";
+import {
+  closeBrackets,
+  closeBracketsKeymap,
+  autocompletion,
+} from "@codemirror/autocomplete";
+import { searchKeymap, highlightSelectionMatches } from "@codemirror/search";
 
-import { stylingExtension } from './styling';
-import { toggleBold, toggleItalic, toggleList, toggleOrderedList, cycleTodo } from './formatting';
+import { stylingExtension } from "./styling";
+import {
+  toggleBold,
+  toggleItalic,
+  toggleList,
+  toggleOrderedList,
+  cycleTodo,
+} from "./formatting";
+import { createMermaidExtension } from "./mermaid";
+import { createSyntaxHidingExtension } from "./syntax_hiding";
 
 /**
  * Create Markdown language support
  */
 export function createMarkdownLanguage(): Extension {
-  return markdown({ 
+  return markdown({
     codeLanguages: languages,
-    extensions: [GFM]
+    extensions: [GFM],
   });
 }
 
@@ -37,18 +63,36 @@ export function createMarkdownKeymap(): Extension {
   const markdownKeys = keymap.of([
     // We'll wire these up to the actual commands via the API
     // We'll wire these up to the actual commands via the API or internal logic
-    { key: 'Mod-b', run: toggleBold },
-    { key: 'Mod-i', run: toggleItalic },
-    { key: 'Mod-`', run: () => { window.editorAPI?.toggleCode(); return true; } },
-    { key: 'Mod-k', run: () => { window.editorAPI?.insertLink(''); return true; } },
-    { key: 'Mod-Shift-k', run: () => { window.editorAPI?.insertImage(''); return true; } },
-    
+    { key: "Mod-b", run: toggleBold },
+    { key: "Mod-i", run: toggleItalic },
+    {
+      key: "Mod-`",
+      run: () => {
+        window.editorAPI?.toggleCode();
+        return true;
+      },
+    },
+    {
+      key: "Mod-k",
+      run: () => {
+        window.editorAPI?.insertLink("");
+        return true;
+      },
+    },
+    {
+      key: "Mod-Shift-k",
+      run: () => {
+        window.editorAPI?.insertImage("");
+        return true;
+      },
+    },
+
     // New Shortcuts
-    { key: 'Ctrl-Mod-l', run: toggleList },
-    { key: 'Ctrl-Mod-o', run: toggleOrderedList },
-    { key: 'Ctrl-Mod-t', run: cycleTodo }
+    { key: "Ctrl-Mod-l", run: toggleList },
+    { key: "Ctrl-Mod-o", run: toggleOrderedList },
+    { key: "Ctrl-Mod-t", run: cycleTodo },
   ]);
-  
+
   return Prec.high(markdownKeys);
 }
 
@@ -61,7 +105,7 @@ export function createAutocompletion(): Extension {
     defaultKeymap: true,
     icons: false,
     closeOnBlur: true,
-    optionClass: () => 'cm-completion-item'
+    optionClass: () => "cm-completion-item",
   });
 }
 
@@ -90,8 +134,8 @@ export function createBaseExtensions(): Extension[] {
       ...searchKeymap,
       ...historyKeymap,
       ...foldKeymap,
-      indentWithTab
-    ])
+      indentWithTab,
+    ]),
   ];
 }
 
@@ -104,8 +148,8 @@ export function createMarkdownExtensions(): Extension[] {
     createMarkdownLanguage(),
     createMarkdownKeymap(),
     createAutocompletion(),
-    // slashCommandKeymap removed, handled by command_palette.ts
-
-    stylingExtension
+    createMermaidExtension(),
+    createSyntaxHidingExtension(),
+    stylingExtension,
   ];
 }

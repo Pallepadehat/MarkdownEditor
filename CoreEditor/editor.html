@@ -1,64 +1,68 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Markdown Editor</title>
-  <style>
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-    }
-    
-    html, body {
-      height: 100%;
-      overflow: hidden;
-      background: transparent;
-      -webkit-font-smoothing: antialiased;
-      -moz-osx-font-smoothing: grayscale;
-    }
-    
-    #editor {
-      height: 100%;
-      width: 100%;
-    }
-    
-    /* Hide scrollbars in a macOS-friendly way */
-    .cm-scroller::-webkit-scrollbar {
-      width: 8px;
-      height: 8px;
-    }
-    
-    .cm-scroller::-webkit-scrollbar-track {
-      background: transparent;
-    }
-    
-    .cm-scroller::-webkit-scrollbar-thumb {
-      background: rgba(128, 128, 128, 0.4);
-      border-radius: 4px;
-    }
-    
-    .cm-scroller::-webkit-scrollbar-thumb:hover {
-      background: rgba(128, 128, 128, 0.6);
-    }
-    
-    /* Focus styles */
-    .cm-editor.cm-focused {
-      outline: none;
-    }
-    
-    /* Placeholder for empty editor */
-    .cm-content[data-placeholder]::before {
-      content: attr(data-placeholder);
-      position: absolute;
-      color: rgba(128, 128, 128, 0.5);
-      pointer-events: none;
-    }
-  </style>
-</head>
-<body>
-  <div id="editor" data-content="" data-theme="light"></div>
-  <script type="module" src="./src/editor.ts"></script>
-</body>
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
+    />
+    <title>Markdown Editor</title>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      html,
+      body {
+        height: 100%;
+        overflow: hidden;
+        background: transparent;
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+      }
+
+      #editor {
+        height: 100%;
+        width: 100%;
+      }
+
+      /* Hide scrollbars in a macOS-friendly way */
+      .cm-scroller::-webkit-scrollbar {
+        width: 8px;
+        height: 8px;
+      }
+
+      .cm-scroller::-webkit-scrollbar-track {
+        background: transparent;
+      }
+
+      .cm-scroller::-webkit-scrollbar-thumb {
+        background: rgba(128, 128, 128, 0.4);
+        border-radius: 4px;
+      }
+
+      .cm-scroller::-webkit-scrollbar-thumb:hover {
+        background: rgba(128, 128, 128, 0.6);
+      }
+
+      /* Focus styles */
+      .cm-editor.cm-focused {
+        outline: none;
+      }
+
+      /* Placeholder for empty editor */
+      .cm-content[data-placeholder]::before {
+        content: attr(data-placeholder);
+        position: absolute;
+        color: rgba(128, 128, 128, 0.5);
+        pointer-events: none;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="editor" data-content="" data-theme="light"></div>
+    <script type="module" src="./src/index.ts"></script>
+  </body>
 </html>

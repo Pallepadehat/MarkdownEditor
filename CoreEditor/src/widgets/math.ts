@@ -51,14 +51,22 @@ export function setMathTheme(theme: "light" | "dark"): void {
  * Widget that renders math formulas.
  */
 class MathWidget extends WidgetType {
-  constructor(readonly codes: string[], readonly displayMode: boolean) {
+  readonly theme: "light" | "dark";
+
+  constructor(
+    readonly codes: string[],
+    readonly displayMode: boolean,
+    theme: "light" | "dark"
+  ) {
     super();
+    this.theme = theme;
   }
 
   eq(other: MathWidget) {
     return (
       JSON.stringify(this.codes) === JSON.stringify(other.codes) &&
-      this.displayMode === other.displayMode
+      this.displayMode === other.displayMode &&
+      this.theme === other.theme
     );
   }
 
@@ -69,9 +77,9 @@ class MathWidget extends WidgetType {
       if (this.displayMode) {
         span.classList.add("cm-math-display");
       }
-      // Apply theme class
+      // Apply theme class based on widget's stored theme
       span.classList.add(
-        currentTheme === "dark" ? "cm-math-dark" : "cm-math-light"
+        this.theme === "dark" ? "cm-math-dark" : "cm-math-light"
       );
 
       // Async render with KaTeX
@@ -163,10 +171,14 @@ class MathWidget extends WidgetType {
 
 /**
  * Creates a cached MathWidget.
+ * Includes theme in cache key so widgets rebuild when theme changes.
  */
 function createMathWidget(codes: string[], displayMode: boolean): MathWidget {
-  const cacheKey = `math:${displayMode}:${codes.join("|||")}`;
-  return getCachedWidget(cacheKey, () => new MathWidget(codes, displayMode));
+  const cacheKey = `math:${currentTheme}:${displayMode}:${codes.join("|||")}`;
+  return getCachedWidget(
+    cacheKey,
+    () => new MathWidget(codes, displayMode, currentTheme)
+  );
 }
 
 /**

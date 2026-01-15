@@ -187,6 +187,7 @@ export class CommandPalette {
   private selectedIndex: number = 0;
   private renderItems: CommandItem[] = [];
   private triggerPos: number = 0;
+  private placement: "top" | "bottom" = "bottom";
 
   /**
    * @param view - The CodeMirror editor view instance
@@ -215,6 +216,8 @@ export class CommandPalette {
         padding: 6px;
         z-index: 99999;
         font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", sans-serif;
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
         animation: palette-fade 0.2s cubic-bezier(0.16, 1, 0.3, 1);
         display: none;
         flex-direction: column;
@@ -256,7 +259,7 @@ export class CommandPalette {
         justify-content: space-between;
         align-items: center;
         padding: 0 12px;
-        height: 36px;
+        min-height: 36px;
         border-radius: 8px;
         cursor: default;
         transition: background-color 0.1s;
@@ -269,14 +272,23 @@ export class CommandPalette {
 
       .palette-label {
         font-size: 13.5px;
-        font-weight: 400;
+        font-weight: 600; /* Force Semi-Bold for consistent thickness */
+        letter-spacing: -0.01em;
       }
 
       .palette-detail {
         font-size: 12px;
         color: rgba(255, 255, 255, 0.55);
+        font-weight: 400;
       }
       
+      .palette-no-results {
+        padding: 12px;
+        text-align: center;
+        color: rgba(255, 255, 255, 0.4);
+        font-size: 13px;
+      }
+
       /* Light Mode Styles */
       .command-palette.light-theme {
         background: rgba(255, 255, 255, 0.72);
@@ -300,6 +312,10 @@ export class CommandPalette {
       .command-palette.light-theme .palette-detail {
         color: rgba(60, 60, 67, 0.55);
       }
+
+      .command-palette.light-theme .palette-no-results {
+        color: rgba(60, 60, 67, 0.4);
+      }
     `;
     document.head.appendChild(style);
 
@@ -322,14 +338,77 @@ export class CommandPalette {
   }
 
   show(left: number, top: number, triggerPos: number) {
-    console.log("[CommandPalette] Showing at", left, top);
+    // console.log("[CommandPalette] Showing at", left, top);
     this.active = true;
     this.triggerPos = triggerPos;
     this.element.style.display = "flex";
-    this.element.style.left = `${left}px`;
-    this.element.style.top = `${top + 24}px`; // Below cursor
+
+    // Reset selection
     this.selectedIndex = 0;
-    this.updateSelection();
+
+    // Reset filter
+    this.renderItems = commands;
+    this.updateList();
+
+    // Determine initial placement preference based on available space
+    // We assume max height (approx 400px) to be safe for the "fit" check so we don't flip later
+    const viewportHeight = window.innerHeight;
+    const maxPossibleHeight = 400;
+
+    // Default to bottom
+    this.placement = "bottom";
+
+    // If bottom overflow?
+    if (top + 24 + maxPossibleHeight > viewportHeight - 10) {
+      // Check top space
+      if (top - maxPossibleHeight - 10 > 0) {
+        this.placement = "top";
+      }
+      // If neither fits, keep bottom
+    }
+
+    this.updatePosition(left, top);
+  }
+
+  updatePosition(left: number, top: number) {
+    const paletteWidth = 332;
+    const paletteHeight = this.element.offsetHeight; // Use actual rendered height
+
+    // Viewport dimensions
+    const viewportWidth = window.innerWidth;
+    const viewportHeight = window.innerHeight;
+
+    let adjustedLeft = left;
+    let adjustedTop = 0;
+
+    // Horizontal Fit
+    if (adjustedLeft + paletteWidth > viewportWidth - 20) {
+      adjustedLeft = viewportWidth - paletteWidth - 20;
+    }
+    if (adjustedLeft < 20) {
+      adjustedLeft = 20;
+    }
+
+    // Vertical Fit based on locked placement
+    if (this.placement === "top") {
+      adjustedTop = top - paletteHeight - 10;
+    } else {
+      adjustedTop = top + 24;
+    }
+
+    // Final safety check
+    if (
+      adjustedTop + paletteHeight > viewportHeight - 10 &&
+      this.placement === "bottom"
+    ) {
+      adjustedTop = viewportHeight - paletteHeight - 10;
+    }
+    if (adjustedTop < 10 && this.placement === "top") {
+      adjustedTop = 10;
+    }
+
+    this.element.style.left = `${adjustedLeft}px`;
+    this.element.style.top = `${adjustedTop}px`;
   }
 
   hide() {
@@ -339,6 +418,15 @@ export class CommandPalette {
 
   updateList() {
     this.element.innerHTML = "";
+
+    if (this.renderItems.length === 0) {
+      const noResults = document.createElement("div");
+      noResults.className = "palette-no-results";
+      noResults.textContent = "No matching commands";
+      this.element.appendChild(noResults);
+      return;
+    }
+
     let currentSection = "";
 
     this.renderItems.forEach((item, index) => {
@@ -380,10 +468,14 @@ export class CommandPalette {
     const item = this.renderItems[index];
     if (!item) return;
 
-    // Remove the "/" trigger char
-    if (this.triggerPos >= 0) {
-      const { from } = this.view.state.selection.main;
-      // Verify if we are indeed after the slash
+    // Remove the Trigger + Query
+    // We need to calculate where we are now
+    const { from } = this.view.state.selection.main;
+    // this.triggerPos is where '/' is.
+    // We replace from triggerPos to current cursor (from)
+
+    // Safety check
+    if (this.triggerPos >= 0 && from >= this.triggerPos) {
       this.view.dispatch({
         changes: { from: this.triggerPos, to: from, insert: "" },
       });
@@ -396,20 +488,52 @@ export class CommandPalette {
   handleUpdate(update: import("@codemirror/view").ViewUpdate) {
     if (!this.active) return;
 
-    if (update.docChanged) {
-      // Check if the trigger slash is still there
-      // We need to map the triggerPos through the changes to see where it ended up
+    if (update.docChanged || update.selectionSet) {
+      // Re-evaluate mapping
       const newPos = update.changes.mapPos(this.triggerPos);
-      this.triggerPos = newPos; // Update our tracker
+      this.triggerPos = newPos;
 
+      const { from } = this.view.state.selection.main;
+
+      // If the cursor moved BEHIND the trigger, close it
+      if (from < newPos) {
+        this.hide();
+        return;
+      }
+
+      // Check if trigger slash exists directly before the tracked pos?
+      // Actually tracking logic:
+      // The slash is at `newPos`. The query is `slice(newPos + 1, from)`.
+      // We must check if the character at `newPos` is actually `/`.
       const char = update.state.sliceDoc(newPos, newPos + 1);
       if (char !== "/") {
         this.hide();
         return;
       }
 
-      // Also hide if the line changed significantly or cursor moved away?
-      // For now, just validating the trigger slash exists is good specific behavior for "delete the / it will close"
+      // Get Query
+      const query = update.state.sliceDoc(newPos + 1, from).toLowerCase();
+
+      // Filter items
+      if (!query) {
+        this.renderItems = commands;
+      } else {
+        this.renderItems = commands.filter(
+          (c) =>
+            c.label.toLowerCase().includes(query) ||
+            c.section.toLowerCase().includes(query) ||
+            (c.shortcut && c.shortcut.toLowerCase().includes(query))
+        );
+      }
+
+      this.selectedIndex = 0;
+      this.updateList();
+
+      // Re-position because height might have changed
+      const coords = this.view.coordsAtPos(newPos);
+      if (coords) {
+        this.updatePosition(coords.left, coords.top);
+      }
     }
   }
 
@@ -421,19 +545,11 @@ export class CommandPalette {
         !event.metaKey &&
         !event.altKey
       ) {
-        // ... (Keep existing logic but ensure we don't block typing / unless we triggered)
-        // Actually, for the trigger we let it bubble so the / gets typed,
-        // then we show the palette.
-
-        // We need to check context synchronously to decide if we pop up
         const { from } = this.view.state.selection.main;
         const line = this.view.state.doc.lineAt(from);
         const textBefore = this.view.state.sliceDoc(line.from, from);
 
         if (textBefore.length === 0 || /\s$/.test(textBefore)) {
-          // It's a valid trigger.
-          // We do NOT prevent default here because we want the '/' to appear.
-          // We schedule the show.
           setTimeout(() => {
             const coords = this.view.coordsAtPos(from);
             if (coords) {
@@ -448,27 +564,36 @@ export class CommandPalette {
       return;
     }
 
+    const itemCount = this.renderItems.length;
+
     // If active, INTERCEPT navigation keys
     switch (event.key) {
       case "ArrowDown":
-        this.selectedIndex = (this.selectedIndex + 1) % this.renderItems.length;
+        if (itemCount === 0) return; // Allow default behavior if empty?
+        this.selectedIndex = (this.selectedIndex + 1) % itemCount;
         this.updateSelection();
         event.preventDefault();
         event.stopPropagation();
         return;
       case "ArrowUp":
-        this.selectedIndex =
-          (this.selectedIndex - 1 + this.renderItems.length) %
-          this.renderItems.length;
+        if (itemCount === 0) return;
+        this.selectedIndex = (this.selectedIndex - 1 + itemCount) % itemCount;
         this.updateSelection();
         event.preventDefault();
         event.stopPropagation();
         return;
       case "Enter":
       case "Tab":
-        this.selectItem(this.selectedIndex);
-        event.preventDefault();
-        event.stopPropagation();
+        if (itemCount > 0) {
+          this.selectItem(this.selectedIndex);
+          event.preventDefault();
+          event.stopPropagation();
+        } else {
+          // Empy list, e.g. user typed a custom thing
+          // Let Enter propagate -> insert newline
+          // But we should probably close the palette?
+          this.hide();
+        }
         return;
       case "Escape":
         this.hide();

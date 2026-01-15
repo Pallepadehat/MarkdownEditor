@@ -86,21 +86,20 @@ let config = EditorConfiguration(
     renderMermaid: true, // Enable Mermaid diagrams
     hideSyntax: true     // Enable Obsidian-style syntax hiding
 )
-```
 
 EditorWebView(
-text: $content,
-configuration: config,
-onReady: {
-print("Editor is ready")
-}
+    text: $content,
+    configuration: config,
+    onReady: {
+        print("Editor is ready")
+    }
 )
-
-````
+```
 
 ## Contributing
 
 This project uses a hybrid architecture:
+
 - **Core**: TypeScript used with CodeMirror 6.
 - **Wrapper**: Swift used for the macOS/iOS integration.
 
@@ -114,6 +113,7 @@ This project uses a hybrid architecture:
 
 1.  **Install JavaScript Dependencies**
     Navigate to the `CoreEditor` directory and install dependencies.
+
     ```bash
     cd CoreEditor
     bun install
@@ -121,9 +121,11 @@ This project uses a hybrid architecture:
 
 2.  **Build Core Editor**
     Bundle the TypeScript code into a single JavaScript file.
+
     ```bash
     bun run build
     ```
+
     This command generates `Sources/MarkdownEditor/Resources/editor.js`.
 
 3.  **Run Xcode**
@@ -138,4 +140,7 @@ This project uses a hybrid architecture:
 ## License
 
 This project is licensed under the MIT License.
-````
+
+```
+
+```

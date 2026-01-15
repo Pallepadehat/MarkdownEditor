@@ -19,7 +19,7 @@ let currentTheme: "light" | "dark" = "light";
 mermaid.initialize({
   startOnLoad: false,
   theme: "default",
-  securityLevel: "loose",
+  securityLevel: "strict",
 });
 
 export function setMermaidTheme(theme: "light" | "dark"): void {
@@ -27,6 +27,7 @@ export function setMermaidTheme(theme: "light" | "dark"): void {
   mermaid.initialize({
     startOnLoad: false,
     theme: theme === "dark" ? "dark" : "default",
+    securityLevel: "strict",
   });
 }
 
@@ -65,7 +66,11 @@ class MermaidWidget extends WidgetType {
         content.innerHTML = svg;
       } catch (e) {
         console.error("Mermaid Render Error", e);
-        content.innerHTML = `<div class="error">Mermaid Error: ${e}</div>`;
+        content.innerHTML = "";
+        const errorDiv = document.createElement("div");
+        errorDiv.className = "error";
+        errorDiv.textContent = `Mermaid Error: ${e}`;
+        content.appendChild(errorDiv);
       }
     };
 
@@ -114,7 +119,18 @@ class MermaidWidget extends WidgetType {
       container.classList.add("resizing");
     });
 
+    // Attach cleanup function to the container for destroy() to call
+    (container as any)._cleanup = () => {
+      document.removeEventListener("mousemove", onMouseMove);
+      document.removeEventListener("mouseup", onMouseUp);
+    };
+
     return container;
+  }
+
+  destroy(dom: HTMLElement) {
+    const cleanup = (dom as any)._cleanup;
+    if (cleanup) cleanup();
   }
 
   ignoreEvent(event: Event) {

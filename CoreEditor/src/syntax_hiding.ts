@@ -193,17 +193,28 @@ const syntaxHidingStyles = EditorView.baseTheme({
     // but font-size: 0 is safer for "mark" decorations.
   },
   ".cm-divider-widget": {
-    height: "1px",
-    background: "var(--divider-color, #ccc)",
-    margin: "12px 0",
-    opacity: "0.5",
+    height: "2px",
+    background: "var(--divider-color, rgba(0,0,0,0.1))",
+    margin: "1.5em 0",
+    borderRadius: "1px",
+    opacity: "0.8",
   },
 });
 
-const syntaxVars = EditorView.theme({
-  "&": { "--divider-color": "#ccc" },
-});
+const syntaxVars = EditorView.theme(
+  {
+    "&": { "--divider-color": "rgba(0,0,0,0.1)" },
+  },
+  { dark: false }
+);
+
+const syntaxVarsDark = EditorView.theme(
+  {
+    "&": { "--divider-color": "rgba(255,255,255,0.15)" },
+  },
+  { dark: true }
+);
 
 export function createSyntaxHidingExtension(): Extension {
-  return [syntaxHidingField, syntaxHidingStyles, syntaxVars];
+  return [syntaxHidingField, syntaxHidingStyles, syntaxVars, syntaxVarsDark];
 }

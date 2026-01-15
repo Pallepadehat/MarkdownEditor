@@ -5,8 +5,11 @@ MarkdownEditor is a native-feeling Markdown editing component for macOS, built w
 ## Features
 
 - **Native Aesthetics**: Designed to match the look and feel of macOS tools (Xcode-inspired theme).
+- **Mermaid Diagrams**: Native support for rendering and resizing Mermaid diagrams live in the editor.
+- **Syntax Hiding**: Obsidian-style interaction that hides markdown markers (e.g., `#`, `**`) on inactive lines for a cleaner reading experience.
+- **Command Palette**: Built-in command palette triggered by `/` command for quick insertions and formatting.
 - **Premium Code Blocks**: Code blocks feature language badges and distinct backgrounds with syntax highlighting for multiple languages.
-- **Typesafe Configuration**: Configure fonts, line numbers, wrapping, and themes using a strictly typed Swift API.
+- **Typesafe Configuration**: Configure fonts, line numbers, wrapping, themes, and feature toggles using a strictly typed Swift API.
 - **Two-Way Binding**: Seamless integration with SwiftUI via `Binding<String>`.
 
 ## Installation
@@ -36,6 +39,7 @@ In your Xcode project settings (Signing & Capabilities):
 ### Troubleshooting Sandbox Logs
 
 If you see logs in your Xcode console like:
+
 - `XPC_ERROR_CONNECTION_INVALID`
 - `Connection init failed at lookup with error 159 - Sandbox restriction`
 - `Failed to set up CFPasteboardRef`
@@ -78,17 +82,21 @@ let config = EditorConfiguration(
     fontFamily: "Menlo",
     lineHeight: 1.5,
     showLineNumbers: true,
-    wrapLines: true
-)
-
-EditorWebView(
-    text: $content,
-    configuration: config,
-    onReady: {
-        print("Editor is ready")
-    }
+    wrapLines: true,
+    renderMermaid: true, // Enable Mermaid diagrams
+    hideSyntax: true     // Enable Obsidian-style syntax hiding
 )
 ```
+
+EditorWebView(
+text: $content,
+configuration: config,
+onReady: {
+print("Editor is ready")
+}
+)
+
+````
 
 ## Contributing
 
@@ -130,3 +138,4 @@ This project uses a hybrid architecture:
 ## License
 
 This project is licensed under the MIT License.
+````

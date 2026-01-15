@@ -31,7 +31,11 @@ export interface EditorConfig {
   /** Whether to wrap long lines. */
   wrapLines?: boolean;
   /** Color theme to use. */
-  theme?: 'light' | 'dark';
+  theme?: "light" | "dark";
+  /** Whether to render Mermaid diagrams. */
+  renderMermaid?: boolean;
+  /** Whether to hide Markdown syntax on inactive lines. */
+  hideSyntax?: boolean;
 }
 
 /**
@@ -42,12 +46,14 @@ export interface EditorAPI {
   getContent: () => string;
   /** Set Markdown content. */
   setContent: (content: string) => void;
-  
+  /** Insert text at cursor or replace selection. */
+  insertText: (text: string) => void;
+
   /** Get current selection range. */
   getSelection: () => { from: number; to: number };
   /** Set selection range. */
   setSelection: (from: number, to: number) => void;
-  
+
   /** Toggle bold formatting. */
   toggleBold: () => void;
   /** Toggle italic formatting. */
@@ -56,7 +62,7 @@ export interface EditorAPI {
   toggleCode: () => void;
   /** Toggle strikethrough formatting. */
   toggleStrikethrough: () => void;
-  
+
   /** Insert a link at the cursor or wrapping selection. */
   insertLink: (url: string, title?: string) => void;
   /** Insert an image at the cursor. */
@@ -71,7 +77,7 @@ export interface EditorAPI {
   insertList: (ordered: boolean) => void;
   /** Insert a horizontal rule. */
   insertHorizontalRule: () => void;
-  
+
   /** Focus the editor. */
   focus: () => void;
   /** Blur the editor. */
@@ -80,10 +86,10 @@ export interface EditorAPI {
   undo: () => void;
   /** Redo last undone change. */
   redo: () => void;
-  
+
   /** Set the editor theme. */
-  setTheme: (theme: 'light' | 'dark') => void;
-  
+  setTheme: (theme: "light" | "dark") => void;
+
   // Configuration
   /** Set the font size. */
   setFontSize: (size: number) => void;
@@ -95,12 +101,12 @@ export interface EditorAPI {
   updateConfiguration: (config: EditorConfig) => void;
 }
 
-export type MessageType = 
-  | 'contentChanged'
-  | 'selectionChanged'
-  | 'ready'
-  | 'focus'
-  | 'blur';
+export type MessageType =
+  | "contentChanged"
+  | "selectionChanged"
+  | "ready"
+  | "focus"
+  | "blur";
 
 export interface EditorMessage {
   type: MessageType;
@@ -116,7 +122,7 @@ export function postMessage(message: EditorMessage): void {
     window.webkit.messageHandlers.editor.postMessage(message);
   } else {
     // Development fallback - log to console
-    console.log('[Bridge]', message);
+    console.log("[Bridge]", message);
   }
 }
 
@@ -125,8 +131,8 @@ export function postMessage(message: EditorMessage): void {
  */
 export function notifyContentChanged(content: string): void {
   postMessage({
-    type: 'contentChanged',
-    payload: { content }
+    type: "contentChanged",
+    payload: { content },
   });
 }
 
@@ -135,8 +141,8 @@ export function notifyContentChanged(content: string): void {
  */
 export function notifySelectionChanged(from: number, to: number): void {
   postMessage({
-    type: 'selectionChanged',
-    payload: { from, to }
+    type: "selectionChanged",
+    payload: { from, to },
   });
 }
 
@@ -144,12 +150,12 @@ export function notifySelectionChanged(from: number, to: number): void {
  * Notify Swift that editor is ready
  */
 export function notifyReady(): void {
-  postMessage({ type: 'ready' });
+  postMessage({ type: "ready" });
 }
 
 /**
  * Notify Swift of focus change
  */
 export function notifyFocus(focused: boolean): void {
-  postMessage({ type: focused ? 'focus' : 'blur' });
+  postMessage({ type: focused ? "focus" : "blur" });
 }

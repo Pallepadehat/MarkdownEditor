@@ -16,13 +16,16 @@ import {
   notifyFocus,
 } from "./bridge";
 import { CommandPalette } from "./command_palette";
-import { setMermaidTheme } from "./mermaid";
+import { setMermaidTheme, createMermaidExtension } from "./mermaid";
+import { createSyntaxHidingExtension } from "./syntax_hiding";
 
 // Compartments for dynamic reconfiguration
 const themeCompartment = new Compartment();
 const styleCompartment = new Compartment();
 const lineNumbersCompartment = new Compartment();
 const lineWrappingCompartment = new Compartment();
+const mermaidCompartment = new Compartment();
+const syntaxHidingCompartment = new Compartment();
 
 let editorView: EditorView | null = null;
 
@@ -53,6 +56,8 @@ let currentConfig: import("./bridge").EditorConfig = {
   lineHeight: 1.8,
   showLineNumbers: true,
   wrapLines: true,
+  renderMermaid: true, // Default to true
+  hideSyntax: true, // Default to true
 };
 
 /**
@@ -91,6 +96,12 @@ function initEditor(
       ),
       lineWrappingCompartment.of(
         currentConfig.wrapLines ? EditorView.lineWrapping : []
+      ),
+      mermaidCompartment.of(
+        currentConfig.renderMermaid ? createMermaidExtension() : []
+      ),
+      syntaxHidingCompartment.of(
+        currentConfig.hideSyntax ? createSyntaxHidingExtension() : []
       ),
 
       // Content change listener
@@ -212,6 +223,10 @@ const editorAPI: EditorAPI = {
     editorView.dispatch({
       changes: { from: 0, to: editorView.state.doc.length, insert: content },
     });
+  },
+
+  insertText(text: string): void {
+    insertText(text); // Use internal function
   },
 
   getSelection(): { from: number; to: number } {
@@ -359,6 +374,24 @@ const editorAPI: EditorAPI = {
       effects.push(
         lineWrappingCompartment.reconfigure(
           config.wrapLines ? EditorView.lineWrapping : []
+        )
+      );
+    }
+
+    // Mermaid
+    if (config.renderMermaid !== undefined) {
+      effects.push(
+        mermaidCompartment.reconfigure(
+          config.renderMermaid ? createMermaidExtension() : []
+        )
+      );
+    }
+
+    // Syntax Hiding
+    if (config.hideSyntax !== undefined) {
+      effects.push(
+        syntaxHidingCompartment.reconfigure(
+          config.hideSyntax ? createSyntaxHidingExtension() : []
         )
       );
     }

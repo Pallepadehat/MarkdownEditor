@@ -1,16 +1,16 @@
 /**
  * Custom Command Palette Implementation
- * 
+ *
  * Replaces the default CodeMirror autocomplete to provide a premium, macOS-native feel.
  * It renders a custom absolute overlay that is positioned near the cursor.
- * 
+ *
  * Key Features:
  * - Capture Phase Event Handling: Intercepts Arrow/Enter/Esc keys before CodeMirror does.
  * - Dynamic Theme Support: Syncs with editor's light/dark mode.
  * - Auto-Dismiss: Closes if the trigger character '/' is deleted.
  */
 
-import { EditorView } from '@codemirror/view';
+import { EditorView } from "@codemirror/view";
 
 export interface CommandItem {
   label: string;
@@ -23,37 +23,161 @@ export interface CommandItem {
 // Reuse the commands from commands.ts but adapted for our custom palette
 export const commands: CommandItem[] = [
   // Formatting
-  { label: 'Bold', detail: 'Make text bold', shortcut: '⌘B', section: 'Formatting', apply: () => window.editorAPI?.toggleBold() },
-  { label: 'Italic', detail: 'Make text italic', shortcut: '⌘I', section: 'Formatting', apply: () => window.editorAPI?.toggleItalic() },
-  { label: 'Strikethrough', detail: 'Strikethrough text', section: 'Formatting', apply: () => window.editorAPI?.toggleStrikethrough() },
-  { label: 'Code', detail: 'Inline code', section: 'Formatting', apply: () => window.editorAPI?.toggleCode() },
+  {
+    label: "Bold",
+    detail: "Make text bold",
+    shortcut: "⌘B",
+    section: "Formatting",
+    apply: () => window.editorAPI?.toggleBold(),
+  },
+  {
+    label: "Italic",
+    detail: "Make text italic",
+    shortcut: "⌘I",
+    section: "Formatting",
+    apply: () => window.editorAPI?.toggleItalic(),
+  },
+  {
+    label: "Strikethrough",
+    detail: "Strikethrough text",
+    section: "Formatting",
+    apply: () => window.editorAPI?.toggleStrikethrough(),
+  },
+  {
+    label: "Code",
+    detail: "Inline code",
+    section: "Formatting",
+    apply: () => window.editorAPI?.toggleCode(),
+  },
 
   // Headings
-  { label: 'Heading 1', detail: 'Large heading', section: 'Headings', apply: () => window.editorAPI?.insertHeading(1) },
-  { label: 'Heading 2', detail: 'Medium heading', section: 'Headings', apply: () => window.editorAPI?.insertHeading(2) },
-  { label: 'Heading 3', detail: 'Small heading', section: 'Headings', apply: () => window.editorAPI?.insertHeading(3) },
-  
+  {
+    label: "Heading 1",
+    detail: "Large heading",
+    section: "Headings",
+    apply: () => window.editorAPI?.insertHeading(1),
+  },
+  {
+    label: "Heading 2",
+    detail: "Medium heading",
+    section: "Headings",
+    apply: () => window.editorAPI?.insertHeading(2),
+  },
+  {
+    label: "Heading 3",
+    detail: "Small heading",
+    section: "Headings",
+    apply: () => window.editorAPI?.insertHeading(3),
+  },
+
   // Lists
-  { label: 'Bullet List', detail: 'Unordered list', section: 'Lists', apply: () => window.editorAPI?.insertList(false) },
-  { label: 'Numbered List', detail: 'Ordered list', section: 'Lists', apply: () => window.editorAPI?.insertList(true) },
-  { label: 'Task List', detail: 'Todo list', section: 'Lists', apply: (view) => {
-    const { from } = view.state.selection.main;
-    const line = view.state.doc.lineAt(from);
-    const prefix = '- [ ] ';
-    view.dispatch({ 
-      changes: { from: line.from, to: line.from, insert: prefix },
-      selection: { anchor: from + prefix.length }
-    });
-  }},
+  {
+    label: "Bullet List",
+    detail: "Unordered list",
+    section: "Lists",
+    apply: () => window.editorAPI?.insertList(false),
+  },
+  {
+    label: "Numbered List",
+    detail: "Ordered list",
+    section: "Lists",
+    apply: () => window.editorAPI?.insertList(true),
+  },
+  {
+    label: "Task List",
+    detail: "Todo list",
+    section: "Lists",
+    apply: (view) => {
+      const { from } = view.state.selection.main;
+      const line = view.state.doc.lineAt(from);
+      const prefix = "- [ ] ";
+      view.dispatch({
+        changes: { from: line.from, to: line.from, insert: prefix },
+        selection: { anchor: from + prefix.length },
+      });
+    },
+  },
 
   // Blocks
-  { label: 'Quote', detail: 'Blockquote', section: 'Blocks', apply: () => window.editorAPI?.insertBlockquote() },
-  { label: 'Code Block', detail: 'Fenced code block', section: 'Blocks', apply: () => window.editorAPI?.insertCodeBlock() },
-  { label: 'Divider', detail: 'Horizontal rule', section: 'Blocks', apply: () => window.editorAPI?.insertHorizontalRule() },
-  
+  {
+    label: "Quote",
+    detail: "Blockquote",
+    section: "Blocks",
+    apply: () => window.editorAPI?.insertBlockquote(),
+  },
+  {
+    label: "Code Block",
+    detail: "Fenced code block",
+    section: "Blocks",
+    apply: () => window.editorAPI?.insertCodeBlock(),
+  },
+  {
+    label: "Divider",
+    detail: "Horizontal rule",
+    section: "Blocks",
+    apply: () => window.editorAPI?.insertHorizontalRule(),
+  },
+
   // Media
-  { label: 'Link', detail: 'Insert link', shortcut: '⌘K', section: 'Media', apply: () => window.editorAPI?.insertLink('') },
-  { label: 'Image', detail: 'Insert image', shortcut: '⌘⇧K', section: 'Media', apply: () => window.editorAPI?.insertImage('') },
+  {
+    label: "Link",
+    detail: "Insert link",
+    shortcut: "⌘K",
+    section: "Media",
+    apply: () => window.editorAPI?.insertLink(""),
+  },
+  {
+    label: "Image",
+    detail: "Insert image",
+    shortcut: "⌘⇧K",
+    section: "Media",
+    apply: () => window.editorAPI?.insertImage(""),
+  },
+
+  // Diagrams
+  {
+    label: "Mermaid Diagram",
+    detail: "Basic graph",
+    section: "Diagrams",
+    apply: () =>
+      window.editorAPI?.insertText("```mermaid\ngraph TD\n  A --> B\n```"),
+  },
+  {
+    label: "Flowchart",
+    detail: "Flowchart diagram",
+    section: "Diagrams",
+    apply: () =>
+      window.editorAPI?.insertText(
+        "```mermaid\ngraph LR\n  A[Start] --> B{Decision}\n  B -->|Yes| C[OK]\n  B -->|No| D[Cancel]\n```"
+      ),
+  },
+  {
+    label: "Sequence Diagram",
+    detail: "Sequence diagram",
+    section: "Diagrams",
+    apply: () =>
+      window.editorAPI?.insertText(
+        "```mermaid\nsequenceDiagram\n  Alice->>John: Hello John, how are you?\n  John-->>Alice: Great!\n```"
+      ),
+  },
+  {
+    label: "Class Diagram",
+    detail: "Class diagram",
+    section: "Diagrams",
+    apply: () =>
+      window.editorAPI?.insertText(
+        "```mermaid\nclassDiagram\n  Animal <|-- Duck\n  Animal : +int age\n  Animal : +String gender\n  class Duck{\n    +String beakColor\n    +swim()\n    +quack()\n  }\n```"
+      ),
+  },
+  {
+    label: "Mindmap",
+    detail: "Mindmap diagram",
+    section: "Diagrams",
+    apply: () =>
+      window.editorAPI?.insertText(
+        "```mermaid\nmindmap\n  root((mindmap))\n    Origins\n    Research\n    Tools\n```"
+      ),
+  },
 ];
 
 export class CommandPalette {
@@ -69,13 +193,13 @@ export class CommandPalette {
    */
   constructor(view: EditorView) {
     this.view = view;
-    this.element = document.createElement('div');
-    this.element.className = 'command-palette';
-    this.element.style.display = 'none';
+    this.element = document.createElement("div");
+    this.element.className = "command-palette";
+    this.element.style.display = "none";
     document.body.appendChild(this.element);
 
     // Initial styles
-    const style = document.createElement('style');
+    const style = document.createElement("style");
     style.textContent = `
       .command-palette {
         position: absolute;
@@ -182,24 +306,26 @@ export class CommandPalette {
     // Initial render
     this.renderItems = commands;
     this.updateList();
-    
+
     // Attach capture handler to intercept keys before CodeMirror
-    this.view.dom.addEventListener('keydown', this.handleKey.bind(this), { capture: true });
+    this.view.dom.addEventListener("keydown", this.handleKey.bind(this), {
+      capture: true,
+    });
   }
-  
-  setTheme(theme: 'light' | 'dark') {
-    if (theme === 'light') {
-      this.element.classList.add('light-theme');
+
+  setTheme(theme: "light" | "dark") {
+    if (theme === "light") {
+      this.element.classList.add("light-theme");
     } else {
-      this.element.classList.remove('light-theme');
+      this.element.classList.remove("light-theme");
     }
   }
 
   show(left: number, top: number, triggerPos: number) {
-    console.log('[CommandPalette] Showing at', left, top);
+    console.log("[CommandPalette] Showing at", left, top);
     this.active = true;
     this.triggerPos = triggerPos;
-    this.element.style.display = 'flex';
+    this.element.style.display = "flex";
     this.element.style.left = `${left}px`;
     this.element.style.top = `${top + 24}px`; // Below cursor
     this.selectedIndex = 0;
@@ -208,28 +334,30 @@ export class CommandPalette {
 
   hide() {
     this.active = false;
-    this.element.style.display = 'none';
+    this.element.style.display = "none";
   }
 
   updateList() {
-    this.element.innerHTML = '';
-    let currentSection = '';
-    
+    this.element.innerHTML = "";
+    let currentSection = "";
+
     this.renderItems.forEach((item, index) => {
       if (item.section !== currentSection) {
         currentSection = item.section;
-        const section = document.createElement('div');
-        section.className = 'palette-section';
+        const section = document.createElement("div");
+        section.className = "palette-section";
         section.textContent = currentSection;
         this.element.appendChild(section);
       }
 
-      const el = document.createElement('div');
-      el.className = 'palette-item';
-      if (index === this.selectedIndex) el.classList.add('selected');
+      const el = document.createElement("div");
+      el.className = "palette-item";
+      if (index === this.selectedIndex) el.classList.add("selected");
       el.innerHTML = `
         <span class="palette-label">${item.label}</span>
-        <span class="palette-detail">${item.detail} ${item.shortcut ? ' ' + item.shortcut : ''}</span>
+        <span class="palette-detail">${item.detail} ${
+        item.shortcut ? " " + item.shortcut : ""
+      }</span>
       `;
       el.onclick = () => this.selectItem(index);
       this.element.appendChild(el);
@@ -237,13 +365,13 @@ export class CommandPalette {
   }
 
   updateSelection() {
-    const items = this.element.querySelectorAll('.palette-item');
+    const items = this.element.querySelectorAll(".palette-item");
     items.forEach((el, index) => {
       if (index === this.selectedIndex) {
-        el.classList.add('selected');
-        el.scrollIntoView({ block: 'nearest' });
+        el.classList.add("selected");
+        el.scrollIntoView({ block: "nearest" });
       } else {
-        el.classList.remove('selected');
+        el.classList.remove("selected");
       }
     });
   }
@@ -254,18 +382,18 @@ export class CommandPalette {
 
     // Remove the "/" trigger char
     if (this.triggerPos >= 0) {
-        const { from } = this.view.state.selection.main;
-        // Verify if we are indeed after the slash
-        this.view.dispatch({
-            changes: { from: this.triggerPos, to: from, insert: '' }
-        });
+      const { from } = this.view.state.selection.main;
+      // Verify if we are indeed after the slash
+      this.view.dispatch({
+        changes: { from: this.triggerPos, to: from, insert: "" },
+      });
     }
 
     item.apply(this.view);
     this.hide();
   }
 
-  handleUpdate(update: import('@codemirror/view').ViewUpdate) {
+  handleUpdate(update: import("@codemirror/view").ViewUpdate) {
     if (!this.active) return;
 
     if (update.docChanged) {
@@ -273,13 +401,13 @@ export class CommandPalette {
       // We need to map the triggerPos through the changes to see where it ended up
       const newPos = update.changes.mapPos(this.triggerPos);
       this.triggerPos = newPos; // Update our tracker
-      
+
       const char = update.state.sliceDoc(newPos, newPos + 1);
-      if (char !== '/') {
+      if (char !== "/") {
         this.hide();
         return;
       }
-      
+
       // Also hide if the line changed significantly or cursor moved away?
       // For now, just validating the trigger slash exists is good specific behavior for "delete the / it will close"
     }
@@ -287,29 +415,34 @@ export class CommandPalette {
 
   handleKey(event: KeyboardEvent) {
     if (!this.active) {
-      if (event.key === '/' && !event.ctrlKey && !event.metaKey && !event.altKey) {
+      if (
+        event.key === "/" &&
+        !event.ctrlKey &&
+        !event.metaKey &&
+        !event.altKey
+      ) {
         // ... (Keep existing logic but ensure we don't block typing / unless we triggered)
-        // Actually, for the trigger we let it bubble so the / gets typed, 
+        // Actually, for the trigger we let it bubble so the / gets typed,
         // then we show the palette.
-        
+
         // We need to check context synchronously to decide if we pop up
         const { from } = this.view.state.selection.main;
         const line = this.view.state.doc.lineAt(from);
         const textBefore = this.view.state.sliceDoc(line.from, from);
 
         if (textBefore.length === 0 || /\s$/.test(textBefore)) {
-           // It's a valid trigger.
-           // We do NOT prevent default here because we want the '/' to appear.
-           // We schedule the show.
-           setTimeout(() => {
-              const coords = this.view.coordsAtPos(from);
-              if (coords) {
-                 this.show(coords.left, coords.top, from);
-              } else {
-                 const domRect = this.view.contentDOM.getBoundingClientRect();
-                 this.show(domRect.left + 50, domRect.top + 50, from);
-              }
-           }, 50);
+          // It's a valid trigger.
+          // We do NOT prevent default here because we want the '/' to appear.
+          // We schedule the show.
+          setTimeout(() => {
+            const coords = this.view.coordsAtPos(from);
+            if (coords) {
+              this.show(coords.left, coords.top, from);
+            } else {
+              const domRect = this.view.contentDOM.getBoundingClientRect();
+              this.show(domRect.left + 50, domRect.top + 50, from);
+            }
+          }, 50);
         }
       }
       return;
@@ -317,25 +450,27 @@ export class CommandPalette {
 
     // If active, INTERCEPT navigation keys
     switch (event.key) {
-      case 'ArrowDown':
+      case "ArrowDown":
         this.selectedIndex = (this.selectedIndex + 1) % this.renderItems.length;
         this.updateSelection();
         event.preventDefault();
         event.stopPropagation();
         return;
-      case 'ArrowUp':
-        this.selectedIndex = (this.selectedIndex - 1 + this.renderItems.length) % this.renderItems.length;
+      case "ArrowUp":
+        this.selectedIndex =
+          (this.selectedIndex - 1 + this.renderItems.length) %
+          this.renderItems.length;
         this.updateSelection();
         event.preventDefault();
         event.stopPropagation();
         return;
-      case 'Enter':
-      case 'Tab':
+      case "Enter":
+      case "Tab":
         this.selectItem(this.selectedIndex);
         event.preventDefault();
         event.stopPropagation();
         return;
-      case 'Escape':
+      case "Escape":
         this.hide();
         event.preventDefault();
         event.stopPropagation();

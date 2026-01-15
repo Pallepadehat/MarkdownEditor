@@ -43,8 +43,6 @@ import {
   toggleOrderedList,
   cycleTodo,
 } from "./formatting";
-import { createMermaidExtension } from "./mermaid";
-import { createSyntaxHidingExtension } from "./syntax_hiding";
 
 /**
  * Create Markdown language support
@@ -148,8 +146,9 @@ export function createMarkdownExtensions(): Extension[] {
     createMarkdownLanguage(),
     createMarkdownKeymap(),
     createAutocompletion(),
-    createMermaidExtension(),
-    createSyntaxHidingExtension(),
+    // Mermaid and Syntax Hiding are now managed dynamically in editor.ts
+    // createMermaidExtension(),
+    // createSyntaxHidingExtension(),
     stylingExtension,
   ];
 }

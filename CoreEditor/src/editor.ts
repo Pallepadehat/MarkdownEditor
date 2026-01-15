@@ -18,6 +18,7 @@ import {
 import { CommandPalette } from "./command_palette";
 import { setMermaidTheme, createMermaidExtension } from "./mermaid";
 import { createSyntaxHidingExtension } from "./syntax_hiding";
+import { createImageExtension } from "./images";
 
 // Compartments for dynamic reconfiguration
 const themeCompartment = new Compartment();
@@ -26,6 +27,7 @@ const lineNumbersCompartment = new Compartment();
 const lineWrappingCompartment = new Compartment();
 const mermaidCompartment = new Compartment();
 const syntaxHidingCompartment = new Compartment();
+const imageCompartment = new Compartment();
 
 let editorView: EditorView | null = null;
 
@@ -58,6 +60,7 @@ let currentConfig: import("./bridge").EditorConfig = {
   wrapLines: true,
   renderMermaid: true, // Default to true
   hideSyntax: true, // Default to true
+  renderImages: true, // Default to true
 };
 
 /**
@@ -102,6 +105,9 @@ function initEditor(
       ),
       syntaxHidingCompartment.of(
         currentConfig.hideSyntax ? createSyntaxHidingExtension() : []
+      ),
+      imageCompartment.of(
+        currentConfig.renderImages ? createImageExtension() : []
       ),
 
       // Content change listener
@@ -392,6 +398,15 @@ const editorAPI: EditorAPI = {
       effects.push(
         syntaxHidingCompartment.reconfigure(
           config.hideSyntax ? createSyntaxHidingExtension() : []
+        )
+      );
+    }
+
+    // Image Rendering
+    if (config.renderImages !== undefined) {
+      effects.push(
+        imageCompartment.reconfigure(
+          config.renderImages ? createImageExtension() : []
         )
       );
     }

@@ -36,6 +36,8 @@ export interface EditorConfig {
   renderMermaid?: boolean;
   /** Whether to hide Markdown syntax on inactive lines. */
   hideSyntax?: boolean;
+  /** Whether to render images directly in the editor. */
+  renderImages?: boolean;
 }
 
 /**

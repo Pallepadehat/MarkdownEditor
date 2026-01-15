@@ -280,11 +280,55 @@ const editorAPI: EditorAPI = {
 
     const { from, to } = editorView.state.selection.main;
     const altText = alt || "image";
-    const imageUrl = url || "https://";
+    // Change: Don't default to https://, leave empty if not provided
+    const imageUrl = url || "";
+
+    const textToInsert = `![${altText}](${imageUrl})`;
 
     editorView.dispatch({
-      changes: { from, to, insert: `![${altText}](${imageUrl})` },
+      changes: { from, to, insert: textToInsert },
+      // Place cursor inside parentheses if url is empty
+      selection: {
+        anchor: from + 2 + altText.length + 2 + imageUrl.length, // ! + [ + alt + ] + ( + url
+        head: from + 2 + altText.length + 2 + imageUrl.length,
+      },
     });
+
+    // If url was empty, we are technically at the end (inside the parens before the closing paren? wait)
+    // textToInsert: ![alt](url)
+    // Length: 2 + alt + 2 + url + 1
+    // We want cursor AFTER url.
+    // If url is empty: ![alt]() -> cursor at index of ')' ?
+    // Wait, we want cursor inside.
+    // If insert is `![alt]()`
+    // Indices:
+    // ! [ a l t ] ( )
+    // 0 1 2 3 4 5 6 7
+    // Cursor should be at 7 (between ( and )).
+    // Formula: from + 2 + alt + 2 ( for ]( ) = from + 4 + alt.
+
+    // Let's re-calculate logic more simply:
+    // We insert `![${altText}](${imageUrl})`
+    // If imageUrl is empty, we want cursor before the last char `)`.
+    // If imageUrl is NOT empty, we probably want cursor after the whole thing? Or maybe keep it selected?
+    // Standard behavior: if inserting with a provided URL (e.g. from picker), just put cursor at end.
+    // If inserting via shortcut (empty url), put cursor inside.
+
+    if (!url) {
+      // Cursor inside: ![alt](|)
+      const cursorPos = from + 2 + altText.length + 2;
+      editorView.dispatch({
+        changes: { from, to, insert: textToInsert },
+        selection: { anchor: cursorPos, head: cursorPos },
+      });
+    } else {
+      // Cursor at end: ![alt](url)|
+      const cursorAfter = from + textToInsert.length;
+      editorView.dispatch({
+        changes: { from, to, insert: textToInsert },
+        selection: { anchor: cursorAfter, head: cursorAfter },
+      });
+    }
   },
 
   insertHeading(level: 1 | 2 | 3 | 4 | 5 | 6): void {

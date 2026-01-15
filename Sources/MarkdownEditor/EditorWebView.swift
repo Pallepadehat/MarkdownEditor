@@ -38,6 +38,12 @@ public struct EditorConfiguration: Codable, Equatable, Sendable {
     /// Whether to render Mermaid diagrams.
     public var renderMermaid: Bool
 
+    /// Whether to render KaTeX math formulas.
+    public var renderMath: Bool
+
+    /// Whether to render inline images.
+    public var renderImages: Bool
+
     /// Whether to hide syntax markers on inactive lines.
     public var hideSyntax: Bool
     
@@ -50,6 +56,8 @@ public struct EditorConfiguration: Codable, Equatable, Sendable {
     ///   - showLineNumbers: Whether to show line numbers. Default is true.
     ///   - wrapLines: Whether to wrap long lines. Default is true.
     ///   - renderMermaid: Whether to render Mermaid diagrams. Default is true.
+    ///   - renderMath: Whether to render KaTeX math formulas. Default is true.
+    ///   - renderImages: Whether to render inline images. Default is true.
     ///   - hideSyntax: Whether to hide syntax markers on inactive lines. Default is true.
     public init(
         fontSize: CGFloat = 15,
@@ -58,6 +66,8 @@ public struct EditorConfiguration: Codable, Equatable, Sendable {
         showLineNumbers: Bool = true,
         wrapLines: Bool = true,
         renderMermaid: Bool = true,
+        renderMath: Bool = true,
+        renderImages: Bool = true,
         hideSyntax: Bool = true
     ) {
         self.fontSize = fontSize
@@ -66,6 +76,8 @@ public struct EditorConfiguration: Codable, Equatable, Sendable {
         self.showLineNumbers = showLineNumbers
         self.wrapLines = wrapLines
         self.renderMermaid = renderMermaid
+        self.renderMath = renderMath
+        self.renderImages = renderImages
         self.hideSyntax = hideSyntax
     }
     

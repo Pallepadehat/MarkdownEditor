@@ -4,59 +4,60 @@ MarkdownEditor is a native-feeling Markdown editing component for macOS, built w
 
 ## Features
 
-- **Native Aesthetics**: Designed to match the look and feel of macOS tools (Xcode-inspired theme).
+- **Native Aesthetics**: Designed to match the look and feel of macOS (Xcode-inspired light/dark themes).
 - **Mermaid Diagrams**: Native support for rendering and resizing Mermaid diagrams live in the editor.
-- **Syntax Hiding**: Obsidian-style interaction that hides markdown markers (e.g., `#`, `**`) on inactive lines for a cleaner reading experience.
-- **Command Palette**: Built-in command palette triggered by `/` command for quick insertions and formatting.
-- **Premium Code Blocks**: Code blocks feature language badges and distinct backgrounds with syntax highlighting for multiple languages.
-- **Typesafe Configuration**: Configure fonts, line numbers, wrapping, themes, and feature toggles using a strictly typed Swift API.
-- **Two-Way Binding**: Seamless integration with SwiftUI via `Binding<String>`.
+- **KaTeX Math**: Render inline (`$...$`) and block (`$$...$$`) math formulas with full LaTeX support.
+- **Syntax Hiding**: Obsidian-style interaction that hides markdown markers on inactive lines.
+- **Command Palette**: Built-in command palette triggered by `/` for quick insertions and formatting.
+- **Premium Code Blocks**: Code blocks feature language badges and distinct backgrounds.
+- **Inline Images**: Render and resize images directly in the editor.
+- **Smart Calculator**: Inline math evaluation inside `$...$` blocks (e.g., `$2+2=` shows `4`).
+- **Typesafe Configuration**: Configure fonts, line numbers, wrapping, themes, and feature toggles via Swift API.
+- **Two-Way Binding**: Seamless SwiftUI integration via `Binding<String>`.
+
+### v0.2.0 Highlights
+
+- **Modular Architecture**: CoreEditor restructured into logical modules (`core/`, `bridge/`, `extensions/`, `widgets/`, `ui/`, `utils/`).
+- **Lazy Loading**: Mermaid (~2.4MB) and KaTeX (~600KB) are now lazy-loaded, reducing initial bundle size by **22%**.
+- **Widget Caching**: LRU cache for widgets prevents redundant re-creation.
+- **Smart Debouncing**: Uses `requestIdleCallback` for non-critical updates.
+- **Theme-Aware Widgets**: Math and diagram widgets properly update when switching themes.
 
 ## Installation
 
 ### Swift Package Manager
 
-Add MarkdownEditor to your project by adding the package dependency in your `Package.swift` file or via Xcode settings.
+Add MarkdownEditor to your project:
 
 ```swift
 dependencies: [
-    .package(url: "https://github.com/Pallepadehat/MarkdownEditor.git", from: "1.0.0")
+    .package(url: "https://github.com/Pallepadehat/MarkdownEditor.git", from: "0.2.0")
 ]
 ```
 
 ## Setup & App Sandbox
 
-To ensure the editor functions correctly within the macOS App Sandbox, you generally need to configure your App Target's entitlements correctly. `WKWebView` (which this package uses) runs in a separate process and requires specific permissions to communicate with the system.
+To ensure the editor functions correctly within the macOS App Sandbox, configure your entitlements:
 
 ### Required Entitlements
 
-In your Xcode project settings (Signing & Capabilities):
+In Xcode (Signing & Capabilities):
 
-1.  **Incoming Connections (Server)**: ❌ **Uncheck** this unless you specifically need it for other features. It is not required for this package and often causes App Store Rejections if not justified.
-2.  **Outgoing Connections (Client)**: ✅ **Check this**. This is **mandatory** for `WKWebView`, even for local content, as it's required for XPC communication with the WebContent process.
-3.  **Allow Execution of JIT-compiled Code**: ✅ **Check this** (under Hardened Runtime). This allows `WKWebView` to use its optimized JavaScript engine.
+1. **Incoming Connections (Server)**: ❌ **Uncheck** (not required, may cause App Store rejections).
+2. **Outgoing Connections (Client)**: ✅ **Check** (mandatory for WKWebView XPC communication).
+3. **Allow Execution of JIT-compiled Code**: ✅ **Check** (under Hardened Runtime).
 
 ### Troubleshooting Sandbox Logs
 
-If you see logs in your Xcode console like:
+Logs like `XPC_ERROR_CONNECTION_INVALID` or `Sandbox restriction` are usually harmless WebKit noise. To minimize:
 
-- `XPC_ERROR_CONNECTION_INVALID`
-- `Connection init failed at lookup with error 159 - Sandbox restriction`
-- `Failed to set up CFPasteboardRef`
-- `networkd_settings_read_from_file Sandbox is preventing this process...`
-
-**These are usually harmless WebKit noise** caused by the isolated WebContent process verifying its own sandbox limits. However, to minimize them:
-
-1.  **Run in Release Mode**: Much of this noise is triggered by `"developerExtrasEnabled"` which is enabled by default in `DEBUG` builds to allow inspecting the web view.
-2.  **Verify Entitlements**: Double-check that **Outgoing Connections (Client)** is checked.
-3.  **Clean Build Folder**: Sometimes Xcode caches old entitlement signatures. Use `Product > Clean Build Folder` (Cmd+Shift+K).
-4.  **Ignore**: If the editor functions correctly (typing works, copy/paste works), you can safely ignore these logs. They indicate the sandbox is working correctly by denying the web process access to system resources it doesn't need (like `networkd` or global pasteboard access beyond standard edit operations).
+1. **Run in Release Mode**: Debug builds enable developer extras.
+2. **Verify Entitlements**: Ensure Outgoing Connections is checked.
+3. **Clean Build Folder**: `Product > Clean Build Folder` (Cmd+Shift+K).
 
 ## Usage
 
 ### Basic Implementation
-
-Import the module and use the `EditorWebView` in your SwiftUI view hierarchy.
 
 ```swift
 import SwiftUI
@@ -74,7 +75,7 @@ struct ContentView: View {
 
 ### Configuration
 
-You can customize the editor's appearance by passing an `EditorConfiguration` instance.
+Customize the editor's appearance and features:
 
 ```swift
 let config = EditorConfiguration(
@@ -83,8 +84,11 @@ let config = EditorConfiguration(
     lineHeight: 1.5,
     showLineNumbers: true,
     wrapLines: true,
-    renderMermaid: true, // Enable Mermaid diagrams
-    hideSyntax: true     // Enable Obsidian-style syntax hiding
+    theme: .light,           // .light or .dark
+    renderMermaid: true,     // Enable Mermaid diagrams
+    renderMath: true,        // Enable KaTeX math
+    renderImages: true,      // Enable inline images
+    hideSyntax: true         // Enable Obsidian-style syntax hiding
 )
 
 EditorWebView(
@@ -96,46 +100,58 @@ EditorWebView(
 )
 ```
 
+### Available Configuration Options
+
+| Option            | Type     | Default  | Description                           |
+| ----------------- | -------- | -------- | ------------------------------------- |
+| `fontSize`        | `Int`    | `15`     | Font size in pixels                   |
+| `fontFamily`      | `String` | System   | CSS font family                       |
+| `lineHeight`      | `Double` | `1.8`    | Line height multiplier                |
+| `showLineNumbers` | `Bool`   | `true`   | Show gutter line numbers              |
+| `wrapLines`       | `Bool`   | `true`   | Wrap long lines                       |
+| `theme`           | `Theme`  | `.light` | Color theme                           |
+| `renderMermaid`   | `Bool`   | `true`   | Render Mermaid diagrams               |
+| `renderMath`      | `Bool`   | `true`   | Render KaTeX math                     |
+| `renderImages`    | `Bool`   | `true`   | Render inline images                  |
+| `hideSyntax`      | `Bool`   | `true`   | Hide syntax markers on inactive lines |
+
 ## Contributing
 
 This project uses a hybrid architecture:
 
-- **Core**: TypeScript used with CodeMirror 6.
-- **Wrapper**: Swift used for the macOS/iOS integration.
+- **CoreEditor/**: TypeScript (CodeMirror 6) source code
+- **Sources/MarkdownEditor/**: Swift wrapper for macOS integration
+
+### CoreEditor Structure (v0.2.0+)
+
+```
+CoreEditor/src/
+├── index.ts          # Entry point
+├── core/             # Editor initialization, state, API
+├── bridge/           # Swift ↔ JS communication
+├── extensions/       # CodeMirror extensions, keymaps, formatting
+├── widgets/          # Mermaid, Math, Images, Syntax hiding
+├── ui/               # Command palette, themes
+└── utils/            # Debounce, DOM helpers
+```
 
 ### Prerequisites
 
-- **Bun**: Used for managing JavaScript dependencies and building the core bundle.
-  Install via `curl -fsSL https://bun.sh/install | bash`
-- **Xcode 15+**: Required for Swift development.
+- **Bun**: `curl -fsSL https://bun.sh/install | bash`
+- **Xcode 15+**
 
 ### Development Workflow
 
-1.  **Install JavaScript Dependencies**
-    Navigate to the `CoreEditor` directory and install dependencies.
+```bash
+# Install dependencies
+cd CoreEditor && bun install
 
-    ```bash
-    cd CoreEditor
-    bun install
-    ```
+# Development server with hot reload
+bun run dev
 
-2.  **Build Core Editor**
-    Bundle the TypeScript code into a single JavaScript file.
-
-    ```bash
-    bun run build
-    ```
-
-    This command generates `Sources/MarkdownEditor/Resources/editor.js`.
-
-3.  **Run Xcode**
-    Open the project in Xcode to build and run the Swift package/tests.
-
-### Project Structure
-
-- `CoreEditor/`: TypeScript source code for the CodeMirror editor.
-- `Sources/MarkdownEditor/`: Swift source code for the wrapper.
-- `Sources/MarkdownEditor/Resources/`: Contains the compiled `editor.js` and `editor.html` template.
+# Build for production
+bun run build
+```
 
 ## License
 

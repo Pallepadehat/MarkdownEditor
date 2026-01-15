@@ -48,16 +48,18 @@ export function getConfig(): EditorConfig {
 
 /**
  * Updates the current configuration.
+ * Returns a shallow copy to prevent external mutation.
  */
 export function updateConfig(partial: Partial<EditorConfig>): EditorConfig {
   currentConfig = { ...currentConfig, ...partial };
-  return currentConfig;
+  return { ...currentConfig };
 }
 
 /**
  * Resets configuration to defaults.
+ * Returns a shallow copy to prevent external mutation.
  */
 export function resetConfig(): EditorConfig {
   currentConfig = { ...defaultConfig };
-  return currentConfig;
+  return { ...currentConfig };
 }

@@ -26,12 +26,42 @@ class ImageWidget extends WidgetType {
     return this.url === other.url && this.alt === other.alt;
   }
 
+  /**
+   * Validates and returns URL only if it uses a safe protocol.
+   */
+  private getSafeUrl(url: string): string | null {
+    const SAFE_PROTOCOLS = ["http:", "https:", "data:", "blob:"];
+    try {
+      const parsed = new URL(url, window.location.href);
+      if (SAFE_PROTOCOLS.includes(parsed.protocol)) {
+        return parsed.href;
+      }
+      console.warn(
+        "ImageWidget: Blocked unsafe URL protocol:",
+        parsed.protocol
+      );
+      return null;
+    } catch {
+      // Relative URLs are safe
+      if (!url.includes(":") || url.startsWith("/")) {
+        return url;
+      }
+      console.warn("ImageWidget: Invalid URL:", url);
+      return null;
+    }
+  }
+
   toDOM() {
     const container = createElement("div");
     container.className = "cm-image-container cm-widget-container";
 
     const img = createElement("img");
-    img.src = this.url;
+
+    // Validate URL to prevent XSS via javascript: protocol
+    const safeUrl = this.getSafeUrl(this.url);
+    if (safeUrl) {
+      img.src = safeUrl;
+    }
     img.alt = this.alt;
     img.className = "cm-image-content";
     container.appendChild(img);

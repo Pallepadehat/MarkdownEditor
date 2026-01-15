@@ -16,7 +16,7 @@ import {
   WidgetType,
 } from "@codemirror/view";
 import { createElement } from "../utils/dom";
-import { getCachedWidget, cleanupResizeHandle } from "./base";
+import { getCachedWidget } from "./base";
 
 // Lazy-loaded Mermaid instance
 let mermaidPromise: Promise<typeof import("mermaid")> | null = null;
@@ -152,7 +152,6 @@ class MermaidWidget extends WidgetType {
   }
 
   destroy(dom: HTMLElement) {
-    cleanupResizeHandle(dom);
     const cleanup = (dom as any)._cleanup;
     if (cleanup) cleanup();
   }

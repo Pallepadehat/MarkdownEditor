@@ -39,8 +39,13 @@ export const baseTheme = EditorView.baseTheme({
   ".cm-activeLineGutter": {
     backgroundColor: "transparent",
   },
-  // Code blocks
+  // Code blocks - :has() for modern browsers, class fallback for Safari 16
   ".cm-line:has(.tok-meta)": {
+    backgroundColor: "var(--code-block-bg, rgba(0,0,0,0.03))",
+    borderRadius: "4px",
+  },
+  // Fallback for Safari 16 and older browsers without :has() support
+  ".cm-line.code-block": {
     backgroundColor: "var(--code-block-bg, rgba(0,0,0,0.03))",
     borderRadius: "4px",
   },

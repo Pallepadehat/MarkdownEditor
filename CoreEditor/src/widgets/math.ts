@@ -69,6 +69,10 @@ class MathWidget extends WidgetType {
       if (this.displayMode) {
         span.classList.add("cm-math-display");
       }
+      // Apply theme class
+      span.classList.add(
+        currentTheme === "dark" ? "cm-math-dark" : "cm-math-light"
+      );
 
       // Async render with KaTeX
       getKatex()

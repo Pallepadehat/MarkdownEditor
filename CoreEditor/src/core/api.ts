@@ -4,8 +4,7 @@
  * Provides the public API exposed to Swift via window.editorAPI.
  */
 
-import type { EditorView } from "@codemirror/view";
-import { lineNumbers } from "@codemirror/view";
+import { EditorView, lineNumbers } from "@codemirror/view";
 import { undo, redo } from "@codemirror/commands";
 import type { EditorAPI, EditorConfig } from "../bridge";
 import { getThemeExtension } from "../ui/themes";
@@ -243,7 +242,7 @@ export function createEditorAPI(
       if (config.fontSize || config.fontFamily || config.lineHeight) {
         effects.push(
           styleCompartment.reconfigure(
-            view.constructor.prototype.constructor.theme({
+            EditorView.theme({
               "&": {
                 fontSize: `${currentConfig.fontSize}px`,
                 fontFamily: currentConfig.fontFamily || "monospace",
@@ -267,9 +266,7 @@ export function createEditorAPI(
       if (config.wrapLines !== undefined) {
         effects.push(
           lineWrappingCompartment.reconfigure(
-            config.wrapLines
-              ? view.constructor.prototype.constructor.lineWrapping
-              : []
+            config.wrapLines ? EditorView.lineWrapping : []
           )
         );
       }

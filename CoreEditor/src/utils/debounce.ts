@@ -5,6 +5,11 @@
 type AnyFunction = (...args: any[]) => any;
 
 /**
+ * Checks if we're in a browser environment.
+ */
+const isBrowser = typeof window !== "undefined";
+
+/**
  * Creates a debounced function that delays invoking the callback.
  * Uses requestIdleCallback when available for non-critical updates.
  */
@@ -18,12 +23,16 @@ export function debounce<T extends AnyFunction>(
 
   return (...args: Parameters<T>) => {
     if (timeoutId) clearTimeout(timeoutId);
-    if (idleCallbackId && "cancelIdleCallback" in window) {
+    if (idleCallbackId && isBrowser && "cancelIdleCallback" in window) {
       (window as any).cancelIdleCallback(idleCallbackId);
     }
 
     timeoutId = setTimeout(() => {
-      if (options.useIdleCallback && "requestIdleCallback" in window) {
+      if (
+        options.useIdleCallback &&
+        isBrowser &&
+        "requestIdleCallback" in window
+      ) {
         idleCallbackId = (window as any).requestIdleCallback(
           () => fn(...args),
           { timeout: delay * 2 }
@@ -75,7 +84,7 @@ export function runWhenIdle(
   callback: () => void,
   options: { timeout?: number } = {}
 ): void {
-  if ("requestIdleCallback" in window) {
+  if (isBrowser && "requestIdleCallback" in window) {
     (window as any).requestIdleCallback(callback, options);
   } else {
     setTimeout(callback, options.timeout ?? 1);

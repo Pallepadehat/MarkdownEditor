@@ -22,21 +22,24 @@ export function createMarkdownKeymap(): Extension {
     {
       key: "Mod-`",
       run: () => {
-        window.editorAPI?.toggleCode();
+        if (!window.editorAPI) return false;
+        window.editorAPI.toggleCode();
         return true;
       },
     },
     {
       key: "Mod-k",
       run: () => {
-        window.editorAPI?.insertLink("");
+        if (!window.editorAPI) return false;
+        window.editorAPI.insertLink("");
         return true;
       },
     },
     {
       key: "Mod-Shift-k",
       run: () => {
-        window.editorAPI?.insertImage("");
+        if (!window.editorAPI) return false;
+        window.editorAPI.insertImage("");
         return true;
       },
     },

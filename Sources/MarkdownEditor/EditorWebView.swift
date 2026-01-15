@@ -251,20 +251,21 @@ public struct EditorWebView: NSViewRepresentable {
         }
         
         public func editorDidBecomeReady() {
-            if !initialContent.isEmpty {
-                Task { @MainActor in
-                    // Apply theme first
-                    await bridge.setTheme(currentTheme)
-                    // Then set content
+            Task { @MainActor in
+                // Apply theme
+                await bridge.setTheme(currentTheme)
+                
+                // Apply configuration to ensure settings like Mermaid/Syntax Hiding are respected
+                await bridge.updateConfiguration(currentConfiguration)
+                
+                // Set content if initial content exists
+                if !initialContent.isEmpty {
                     await bridge.setContent(initialContent)
                     lastKnownContent = initialContent
                 }
-            } else {
-                 Task { @MainActor in
-                    await bridge.setTheme(currentTheme)
-                 }
+                
+                onReady?()
             }
-            onReady?()
         }
         
         public func editorDidChangeSelection(_ selection: EditorSelection) {

@@ -7,10 +7,11 @@
 import type { EditorView, ViewUpdate } from "@codemirror/view";
 import { createElement } from "../../utils/dom";
 import { injectStyles } from "../../utils/dom";
-import { commands, CommandItem } from "./commands";
+import { commands } from "./commands";
+import type { CommandItem } from "./commands";
 import { paletteStyles } from "./styles";
 
-export { CommandItem } from "./commands";
+export type { CommandItem } from "./commands";
 
 /**
  * Command palette overlay triggered by '/'.

@@ -34,6 +34,12 @@ public struct EditorConfiguration: Codable, Equatable, Sendable {
     
     /// Whether to wrap long lines.
     public var wrapLines: Bool
+
+    /// Whether to render Mermaid diagrams.
+    public var renderMermaid: Bool
+
+    /// Whether to hide syntax markers on inactive lines.
+    public var hideSyntax: Bool
     
     /// Creates a new editor configuration.
     ///
@@ -42,18 +48,25 @@ public struct EditorConfiguration: Codable, Equatable, Sendable {
     ///   - fontFamily: The CSS font-family string. Default is system monospace.
     ///   - lineHeight: The line height multiplier. Default is 1.6.
     ///   - showLineNumbers: Whether to show line numbers. Default is true.
+    ///   - wrapLines: Whether to wrap long lines. Default is true.
+    ///   - renderMermaid: Whether to render Mermaid diagrams. Default is true.
+    ///   - hideSyntax: Whether to hide syntax markers on inactive lines. Default is true.
     public init(
         fontSize: CGFloat = 15,
         fontFamily: String = "-apple-system, BlinkMacSystemFont, 'SF Mono', Menlo, Monaco, monospace",
         lineHeight: CGFloat = 1.6,
         showLineNumbers: Bool = true,
-        wrapLines: Bool = true
+        wrapLines: Bool = true,
+        renderMermaid: Bool = true,
+        hideSyntax: Bool = true
     ) {
         self.fontSize = fontSize
         self.fontFamily = fontFamily
         self.lineHeight = lineHeight
         self.showLineNumbers = showLineNumbers
         self.wrapLines = wrapLines
+        self.renderMermaid = renderMermaid
+        self.hideSyntax = hideSyntax
     }
     
     /// The default editor configuration.

@@ -386,7 +386,10 @@ public final class EditorBridge: NSObject {
     /// - Parameter family: A CSS font-family string.
     public func setFontFamily(_ family: String) async {
         guard let webView, isReady else { return }
-        _ = try? await webView.evaluateJavaScript("window.editorAPI.setFontFamily(\"\(family)\")")
+        let escapedFamily = family
+            .replacingOccurrences(of: "\\", with: "\\\\")
+            .replacingOccurrences(of: "\"", with: "\\\"")
+        _ = try? await webView.evaluateJavaScript("window.editorAPI.setFontFamily(\"\(escapedFamily)\")")
     }
     
     /// Updates the editor configuration.

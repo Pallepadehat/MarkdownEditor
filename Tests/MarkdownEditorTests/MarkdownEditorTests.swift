@@ -28,6 +28,14 @@ final class MarkdownEditorTests: XCTestCase {
         XCTAssertFalse(config.showLineNumbers)
     }
     
+    func testFontFamilyWithQuotes() {
+        let config = EditorConfiguration(
+            fontFamily: "-apple-system, 'SF Mono', Menlo, monospace"
+        )
+        XCTAssertEqual(config.fontFamily, "-apple-system, 'SF Mono', Menlo, monospace",
+                      "Font family with quotes should be preserved")
+    }
+    
     // MARK: - EditorSelection Tests
     
     func testEditorSelectionEmpty() {

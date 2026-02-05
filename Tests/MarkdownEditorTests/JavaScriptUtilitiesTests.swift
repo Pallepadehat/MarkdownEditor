@@ -319,6 +319,21 @@ final class JavaScriptUtilitiesTests: XCTestCase {
         XCTAssertEqual(arg.toJavaScript(), "42.5")
     }
     
+    func testNumberArgumentWithNaN() {
+        let arg = JavaScriptArgument.number(.nan)
+        XCTAssertEqual(arg.toJavaScript(), "NaN", "NaN should convert to JavaScript 'NaN'")
+    }
+    
+    func testNumberArgumentWithInfinity() {
+        let arg = JavaScriptArgument.number(.infinity)
+        XCTAssertEqual(arg.toJavaScript(), "Infinity", "Positive infinity should convert to 'Infinity'")
+    }
+    
+    func testNumberArgumentWithNegativeInfinity() {
+        let arg = JavaScriptArgument.number(-.infinity)
+        XCTAssertEqual(arg.toJavaScript(), "-Infinity", "Negative infinity should convert to '-Infinity'")
+    }
+    
     func testBooleanTrueConversion() {
         let arg = JavaScriptArgument.boolean(true)
         XCTAssertEqual(arg.toJavaScript(), "true")

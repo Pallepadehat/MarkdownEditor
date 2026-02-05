@@ -231,8 +231,9 @@ final class PerformanceTests: XCTestCase {
     // MARK: - Concurrent Operations Performance
     
     @MainActor
-    func testConcurrentSelectionCreation() async {
+    func testConcurrentSelectionCreation() {
         measure {
+            let semaphore = DispatchSemaphore(value: 0)
             Task { @MainActor in
                 await withTaskGroup(of: Void.self) { group in
                     for i in 0..<1_000 {
@@ -241,13 +242,16 @@ final class PerformanceTests: XCTestCase {
                         }
                     }
                 }
+                semaphore.signal()
             }
+            semaphore.wait()
         }
     }
     
     @MainActor
-    func testConcurrentConfigurationCreation() async {
+    func testConcurrentConfigurationCreation() {
         measure {
+            let semaphore = DispatchSemaphore(value: 0)
             Task { @MainActor in
                 await withTaskGroup(of: Void.self) { group in
                     for i in 0..<1_000 {
@@ -256,7 +260,9 @@ final class PerformanceTests: XCTestCase {
                         }
                     }
                 }
+                semaphore.signal()
             }
+            semaphore.wait()
         }
     }
 }

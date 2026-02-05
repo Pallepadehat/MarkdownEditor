@@ -198,13 +198,14 @@ public final class EditorBridge: NSObject {
             throw EditorBridgeError.bridgeDisconnected
         }
         
+        // Validate input early before checking isReady
+        let validatedContent = try JavaScriptUtilities.validateInput(text: content)
+        
         guard isReady else {
-            cachedContent = content
+            // Cache the validated content
+            cachedContent = validatedContent
             return
         }
-        
-        // Validate input
-        let validatedContent = try JavaScriptUtilities.validateInput(text: content)
         
         isUpdatingFromSwift = true
         defer { isUpdatingFromSwift = false }
@@ -215,7 +216,7 @@ public final class EditorBridge: NSObject {
                 arguments: [.string(validatedContent)]
             )
             _ = try await webView.evaluateJavaScript(call)
-            cachedContent = content
+            cachedContent = validatedContent
         } catch let error as EditorBridgeError {
             throw error
         } catch {
@@ -334,6 +335,9 @@ public final class EditorBridge: NSObject {
     /// - Parameter level: The heading level (1-6).
     /// - Throws: `EditorBridgeError` if the operation fails or level is invalid.
     public func insertHeading(level: Int) async throws {
+        guard let webView else {
+            throw EditorBridgeError.bridgeDisconnected
+        }
         guard isReady else {
             throw EditorBridgeError.editorNotReady
         }
@@ -341,7 +345,21 @@ public final class EditorBridge: NSObject {
         // Validate heading level
         try JavaScriptUtilities.validateHeadingLevel(level)
         
-        await executeCommand("insertHeading", arguments: [.number(Double(level))])
+        // Execute command with proper error propagation
+        do {
+            let call = try JavaScriptUtilities.buildJavaScriptCall(
+                method: "window.editorAPI.insertHeading",
+                arguments: [.number(Double(level))]
+            )
+            _ = try await webView.evaluateJavaScript(call)
+        } catch let error as EditorBridgeError {
+            throw error
+        } catch {
+            throw EditorBridgeError.javaScriptEvaluationFailed(
+                command: "insertHeading",
+                underlyingError: error
+            )
+        }
     }
     
     /// Inserts a blockquote marker at the current line.

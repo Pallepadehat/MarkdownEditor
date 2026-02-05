@@ -178,41 +178,41 @@ final class MarkdownEditorTests: XCTestCase {
     
     // MARK: - Sendable Conformance Tests
     
-    func testEditorSelectionIsSendable() {
+    func testEditorSelectionIsSendable() async {
         let selection = EditorSelection(from: 0, to: 10)
         
-        Task {
+        await Task {
             let copiedSelection = selection
             XCTAssertEqual(copiedSelection.from, 0)
             XCTAssertEqual(copiedSelection.to, 10)
-        }
+        }.value
     }
     
-    func testEditorConfigurationIsSendable() {
+    func testEditorConfigurationIsSendable() async {
         let config = EditorConfiguration(fontSize: 16)
         
-        Task {
+        await Task {
             let copiedConfig = config
             XCTAssertEqual(copiedConfig.fontSize, 16)
-        }
+        }.value
     }
     
-    func testEditorThemeIsSendable() {
+    func testEditorThemeIsSendable() async {
         let theme = EditorTheme.dark
         
-        Task {
+        await Task {
             let copiedTheme = theme
             XCTAssertEqual(copiedTheme, .dark)
-        }
+        }.value
     }
     
-    func testEditorMessageTypeIsSendable() {
+    func testEditorMessageTypeIsSendable() async {
         let messageType = EditorMessageType.contentChanged
         
-        Task {
+        await Task {
             let copiedType = messageType
             XCTAssertEqual(copiedType, .contentChanged)
-        }
+        }.value
     }
 }
 

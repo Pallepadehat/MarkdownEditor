@@ -167,7 +167,14 @@ enum JavaScriptArgument {
         case .string(let value):
             return "\"\(JavaScriptUtilities.escapeJavaScriptString(value))\""
         case .number(let value):
-            return "\(value)"
+            // Handle special Double values with proper JavaScript literals
+            if value.isNaN {
+                return "NaN"
+            } else if value.isInfinite {
+                return value.sign == .minus ? "-Infinity" : "Infinity"
+            } else {
+                return String(value)
+            }
         case .boolean(let value):
             return value ? "true" : "false"
         case .null:

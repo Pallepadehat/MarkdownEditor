@@ -389,6 +389,11 @@ public final class EditorBridge: NSObject {
         let escapedFamily = family
             .replacingOccurrences(of: "\\", with: "\\\\")
             .replacingOccurrences(of: "\"", with: "\\\"")
+            .replacingOccurrences(of: "\n", with: "\\n")
+            .replacingOccurrences(of: "\r", with: "\\r")
+            .replacingOccurrences(of: "\t", with: "\\t")
+            .replacingOccurrences(of: "\u{2028}", with: "\\u2028")
+            .replacingOccurrences(of: "\u{2029}", with: "\\u2029")
         _ = try? await webView.evaluateJavaScript("window.editorAPI.setFontFamily(\"\(escapedFamily)\")")
     }
     

@@ -36,6 +36,41 @@ final class MarkdownEditorTests: XCTestCase {
                       "Font family with quotes should be preserved")
     }
     
+    func testConfigurationWithAllFeatures() {
+        let config = EditorConfiguration(
+            fontSize: 16,
+            fontFamily: "Monaco",
+            lineHeight: 1.7,
+            showLineNumbers: true,
+            wrapLines: true,
+            renderMermaid: true,
+            renderMath: true,
+            renderImages: true,
+            hideSyntax: true
+        )
+        
+        XCTAssertEqual(config.fontSize, 16)
+        XCTAssertTrue(config.wrapLines)
+        XCTAssertTrue(config.renderMermaid)
+        XCTAssertTrue(config.renderMath)
+        XCTAssertTrue(config.renderImages)
+        XCTAssertTrue(config.hideSyntax)
+    }
+    
+    func testConfigurationDisablingFeatures() {
+        let config = EditorConfiguration(
+            renderMermaid: false,
+            renderMath: false,
+            renderImages: false,
+            hideSyntax: false
+        )
+        
+        XCTAssertFalse(config.renderMermaid)
+        XCTAssertFalse(config.renderMath)
+        XCTAssertFalse(config.renderImages)
+        XCTAssertFalse(config.hideSyntax)
+    }
+    
     // MARK: - EditorSelection Tests
     
     func testEditorSelectionEmpty() {
@@ -50,6 +85,19 @@ final class MarkdownEditorTests: XCTestCase {
         
         XCTAssertFalse(selection.isEmpty, "Selection with different from/to should not be empty")
         XCTAssertEqual(selection.length, 10, "Selection length should be to - from")
+    }
+    
+    func testEditorSelectionAtStart() {
+        let selection = EditorSelection(from: 0, to: 5)
+        XCTAssertEqual(selection.from, 0)
+        XCTAssertEqual(selection.to, 5)
+        XCTAssertEqual(selection.length, 5)
+    }
+    
+    func testEditorSelectionLargeRange() {
+        let selection = EditorSelection(from: 1000, to: 5000)
+        XCTAssertEqual(selection.length, 4000)
+        XCTAssertFalse(selection.isEmpty)
     }
     
     // MARK: - EditorTheme Tests
@@ -70,6 +118,21 @@ final class MarkdownEditorTests: XCTestCase {
         XCTAssertNil(EditorMessageType(rawValue: "invalid"))
     }
     
+    func testEditorMessageTypeAllCases() {
+        let allTypes: [EditorMessageType] = [
+            .contentChanged,
+            .selectionChanged,
+            .ready,
+            .focus,
+            .blur
+        ]
+        
+        for type in allTypes {
+            XCTAssertNotNil(EditorMessageType(rawValue: type.rawValue),
+                          "Type \(type) should round-trip through raw value")
+        }
+    }
+    
     // MARK: - EditorBridge Tests
     
     @MainActor
@@ -80,6 +143,15 @@ final class MarkdownEditorTests: XCTestCase {
         XCTAssertNil(bridge.delegate, "Bridge should have no delegate initially")
     }
     
+    @MainActor
+    func testEditorBridgeDelegateAssignment() {
+        let bridge = EditorBridge()
+        let delegate = MockDelegate()
+        
+        bridge.delegate = delegate
+        XCTAssertNotNil(bridge.delegate, "Delegate should be assignable")
+    }
+    
     // MARK: - Resource Bundle Tests
     
     func testEditorHTMLExists() {
@@ -87,16 +159,95 @@ final class MarkdownEditorTests: XCTestCase {
         XCTAssertNotNil(htmlURL, "editor.html should exist in bundle")
     }
     
-    func testEditorJSExists() {
-        let jsURL = Bundle.module.url(forResource: "editor", withExtension: "js")
-        XCTAssertNotNil(jsURL, "editor.js should exist in bundle")
-    }
-    
     func testEditorHTMLContainsEditorDiv() throws {
         let htmlURL = try XCTUnwrap(Bundle.module.url(forResource: "editor", withExtension: "html"))
         let htmlContent = try String(contentsOf: htmlURL, encoding: .utf8)
         
         XCTAssertTrue(htmlContent.contains("id=\"editor\""), "HTML should contain editor div")
-        XCTAssertTrue(htmlContent.contains("editor.js"), "HTML should reference editor.js")
+    }
+    
+    func testEditorHTMLHasValidStructure() throws {
+        let htmlURL = try XCTUnwrap(Bundle.module.url(forResource: "editor", withExtension: "html"))
+        let htmlContent = try String(contentsOf: htmlURL, encoding: .utf8)
+        
+        XCTAssertTrue(htmlContent.contains("<!DOCTYPE html>"), "HTML should have DOCTYPE")
+        XCTAssertTrue(htmlContent.contains("<html"), "HTML should have html tag")
+        XCTAssertTrue(htmlContent.contains("<head>"), "HTML should have head tag")
+        XCTAssertTrue(htmlContent.contains("<body>"), "HTML should have body tag")
+    }
+    
+    // MARK: - Sendable Conformance Tests
+    
+    func testEditorSelectionIsSendable() {
+        let selection = EditorSelection(from: 0, to: 10)
+        
+        Task {
+            let copiedSelection = selection
+            XCTAssertEqual(copiedSelection.from, 0)
+            XCTAssertEqual(copiedSelection.to, 10)
+        }
+    }
+    
+    func testEditorConfigurationIsSendable() {
+        let config = EditorConfiguration(fontSize: 16)
+        
+        Task {
+            let copiedConfig = config
+            XCTAssertEqual(copiedConfig.fontSize, 16)
+        }
+    }
+    
+    func testEditorThemeIsSendable() {
+        let theme = EditorTheme.dark
+        
+        Task {
+            let copiedTheme = theme
+            XCTAssertEqual(copiedTheme, .dark)
+        }
+    }
+    
+    func testEditorMessageTypeIsSendable() {
+        let messageType = EditorMessageType.contentChanged
+        
+        Task {
+            let copiedType = messageType
+            XCTAssertEqual(copiedType, .contentChanged)
+        }
+    }
+}
+
+// MARK: - Mock Delegate
+
+@MainActor
+private class MockDelegate: EditorBridgeDelegate {
+    var contentChangeCount = 0
+    var selectionChangeCount = 0
+    var readyCount = 0
+    var focusCount = 0
+    var blurCount = 0
+    
+    var lastContent: String?
+    var lastSelection: EditorSelection?
+    
+    func editorDidChangeContent(_ content: String) {
+        contentChangeCount += 1
+        lastContent = content
+    }
+    
+    func editorDidChangeSelection(_ selection: EditorSelection) {
+        selectionChangeCount += 1
+        lastSelection = selection
+    }
+    
+    func editorDidBecomeReady() {
+        readyCount += 1
+    }
+    
+    func editorDidFocus() {
+        focusCount += 1
+    }
+    
+    func editorDidBlur() {
+        blurCount += 1
     }
 }

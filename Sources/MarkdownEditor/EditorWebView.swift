@@ -209,7 +209,7 @@ public struct EditorWebView: NSViewRepresentable {
         if text != coordinator.lastKnownContent && !coordinator.isUpdatingBinding {
             coordinator.lastKnownContent = text
             Task { @MainActor in
-                await coordinator.bridge.setContent(text)
+                try? await coordinator.bridge.setContent(text)
             }
         }
     }
@@ -272,7 +272,7 @@ public struct EditorWebView: NSViewRepresentable {
                 
                 // Set content if initial content exists
                 if !initialContent.isEmpty {
-                    await bridge.setContent(initialContent)
+                    try? await bridge.setContent(initialContent)
                     lastKnownContent = initialContent
                 }
                 

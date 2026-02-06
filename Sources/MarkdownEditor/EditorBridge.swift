@@ -192,27 +192,38 @@ public final class EditorBridge: NSObject {
     /// Sets the editor content.
     ///
     /// - Parameter content: The Markdown content to set.
-    public func setContent(_ content: String) async {
-        guard let webView, isReady else {
-            cachedContent = content
+    /// - Throws: `EditorBridgeError` if the operation fails.
+    public func setContent(_ content: String) async throws {
+        guard let webView else {
+            throw EditorBridgeError.bridgeDisconnected
+        }
+        
+        // Validate input early before checking isReady
+        let validatedContent = try JavaScriptUtilities.validateInput(text: content)
+        
+        guard isReady else {
+            // Cache the validated content
+            cachedContent = validatedContent
             return
         }
         
         isUpdatingFromSwift = true
         defer { isUpdatingFromSwift = false }
         
-        let escaped = content
-            .replacingOccurrences(of: "\\", with: "\\\\")
-            .replacingOccurrences(of: "\"", with: "\\\"")
-            .replacingOccurrences(of: "\n", with: "\\n")
-            .replacingOccurrences(of: "\r", with: "\\r")
-            .replacingOccurrences(of: "\t", with: "\\t")
-        
         do {
-            _ = try await webView.evaluateJavaScript("window.editorAPI.setContent(\"\(escaped)\")")
-            cachedContent = content
+            let call = try JavaScriptUtilities.buildJavaScriptCall(
+                method: "window.editorAPI.setContent",
+                arguments: [.string(validatedContent)]
+            )
+            _ = try await webView.evaluateJavaScript(call)
+            cachedContent = validatedContent
+        } catch let error as EditorBridgeError {
+            throw error
         } catch {
-            print("[EditorBridge] Failed to set content: \(error)")
+            throw EditorBridgeError.javaScriptEvaluationFailed(
+                command: "setContent",
+                underlyingError: error
+            )
         }
     }
     
@@ -239,9 +250,32 @@ public final class EditorBridge: NSObject {
     /// - Parameters:
     ///   - from: The start position.
     ///   - to: The end position.
-    public func setSelection(from: Int, to: Int) async {
-        guard let webView, isReady else { return }
-        _ = try? await webView.evaluateJavaScript("window.editorAPI.setSelection(\(from), \(to))")
+    /// - Throws: `EditorBridgeError` if the operation fails or parameters are invalid.
+    public func setSelection(from: Int, to: Int) async throws {
+        guard let webView else {
+            throw EditorBridgeError.bridgeDisconnected
+        }
+        guard isReady else {
+            throw EditorBridgeError.editorNotReady
+        }
+        
+        // Validate selection range
+        try JavaScriptUtilities.validateSelection(from: from, to: to)
+        
+        do {
+            let call = try JavaScriptUtilities.buildJavaScriptCall(
+                method: "window.editorAPI.setSelection",
+                arguments: [.number(Double(from)), .number(Double(to))]
+            )
+            _ = try await webView.evaluateJavaScript(call)
+        } catch let error as EditorBridgeError {
+            throw error
+        } catch {
+            throw EditorBridgeError.javaScriptEvaluationFailed(
+                command: "setSelection",
+                underlyingError: error
+            )
+        }
     }
     
     // MARK: - Formatting Commands
@@ -299,9 +333,33 @@ public final class EditorBridge: NSObject {
     /// Inserts a heading at the current line.
     ///
     /// - Parameter level: The heading level (1-6).
-    public func insertHeading(level: Int) async {
-        guard let webView, isReady, (1...6).contains(level) else { return }
-        _ = try? await webView.evaluateJavaScript("window.editorAPI.insertHeading(\(level))")
+    /// - Throws: `EditorBridgeError` if the operation fails or level is invalid.
+    public func insertHeading(level: Int) async throws {
+        guard let webView else {
+            throw EditorBridgeError.bridgeDisconnected
+        }
+        guard isReady else {
+            throw EditorBridgeError.editorNotReady
+        }
+        
+        // Validate heading level
+        try JavaScriptUtilities.validateHeadingLevel(level)
+        
+        // Execute command with proper error propagation
+        do {
+            let call = try JavaScriptUtilities.buildJavaScriptCall(
+                method: "window.editorAPI.insertHeading",
+                arguments: [.number(Double(level))]
+            )
+            _ = try await webView.evaluateJavaScript(call)
+        } catch let error as EditorBridgeError {
+            throw error
+        } catch {
+            throw EditorBridgeError.javaScriptEvaluationFailed(
+                command: "insertHeading",
+                underlyingError: error
+            )
+        }
     }
     
     /// Inserts a blockquote marker at the current line.
@@ -329,6 +387,64 @@ public final class EditorBridge: NSObject {
     /// Inserts a horizontal rule.
     public func insertHorizontalRule() async {
         await executeCommand("insertHorizontalRule")
+    }
+    
+    /// Inserts the current date at the cursor position.
+    ///
+    /// - Parameter format: The date format to use. Defaults to "yyyy-MM-dd".
+    ///
+    /// ## Common Formats
+    /// - `"yyyy-MM-dd"` → 2026-02-06
+    /// - `"MMMM d, yyyy"` → February 6, 2026
+    /// - `"MMM d, yyyy"` → Feb 6, 2026
+    /// - `"EEEE, MMMM d, yyyy"` → Thursday, February 6, 2026
+    /// - `"MM/dd/yyyy"` → 02/06/2026
+    ///
+    /// - Note: Uses the user's current locale for formatting.
+    public func insertDate(format: String = "yyyy-MM-dd") async {
+        guard let webView, isReady else { return }
+        
+        let formatter = DateFormatter()
+        formatter.dateFormat = format
+        let dateString = formatter.string(from: Date())
+        
+        do {
+            let call = try JavaScriptUtilities.buildJavaScriptCall(
+                method: "window.editorAPI.insertText",
+                arguments: [.string(dateString)]
+            )
+            _ = try await webView.evaluateJavaScript(call)
+        } catch {
+            // Silently fail for convenience methods
+        }
+    }
+    
+    /// Inserts a timestamp at the cursor position.
+    ///
+    /// - Parameter includeTime: If true, includes the time. Defaults to false.
+    /// - Parameter locale: The locale to use. Defaults to current locale.
+    ///
+    /// ## Examples
+    /// - `includeTime: false` → February 6, 2026
+    /// - `includeTime: true` → February 6, 2026 at 11:10 PM
+    public func insertTimestamp(includeTime: Bool = false, locale: Locale = .current) async {
+        guard let webView, isReady else { return }
+        
+        let formatter = DateFormatter()
+        formatter.locale = locale
+        formatter.dateStyle = .long
+        formatter.timeStyle = includeTime ? .short : .none
+        let dateString = formatter.string(from: Date())
+        
+        do {
+            let call = try JavaScriptUtilities.buildJavaScriptCall(
+                method: "window.editorAPI.insertText",
+                arguments: [.string(dateString)]
+            )
+            _ = try await webView.evaluateJavaScript(call)
+        } catch {
+            // Silently fail for convenience methods
+        }
     }
     
     // MARK: - Editor State
@@ -386,7 +502,16 @@ public final class EditorBridge: NSObject {
     /// - Parameter family: A CSS font-family string.
     public func setFontFamily(_ family: String) async {
         guard let webView, isReady else { return }
-        _ = try? await webView.evaluateJavaScript("window.editorAPI.setFontFamily(\"\(family)\")")
+        
+        do {
+            let call = try JavaScriptUtilities.buildJavaScriptCall(
+                method: "window.editorAPI.setFontFamily",
+                arguments: [.string(family)]
+            )
+            _ = try await webView.evaluateJavaScript(call)
+        } catch {
+            print("[EditorBridge] Failed to set font family: \(error)")
+        }
     }
     
     /// Updates the editor configuration.
@@ -406,9 +531,18 @@ public final class EditorBridge: NSObject {
     
     // MARK: - Private Helpers
     
-    private func executeCommand(_ command: String) async {
+    private func executeCommand(_ command: String, arguments: [JavaScriptArgument] = []) async {
         guard let webView, isReady else { return }
-        _ = try? await webView.evaluateJavaScript("window.editorAPI.\(command)()")
+        
+        do {
+            let call = try JavaScriptUtilities.buildJavaScriptCall(
+                method: "window.editorAPI.\(command)",
+                arguments: arguments
+            )
+            _ = try await webView.evaluateJavaScript(call)
+        } catch {
+            print("[EditorBridge] Failed to execute command '\(command)': \(error)")
+        }
     }
 }
 
@@ -454,7 +588,7 @@ extension EditorBridge: WKScriptMessageHandler {
             isReady = true
             if !cachedContent.isEmpty {
                 Task {
-                    await setContent(cachedContent)
+                    try? await setContent(cachedContent)
                 }
             }
             delegate?.editorDidBecomeReady()

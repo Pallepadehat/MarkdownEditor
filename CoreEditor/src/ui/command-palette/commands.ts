@@ -139,7 +139,7 @@ export const commands: CommandItem[] = [
     section: "Diagrams",
     apply: () =>
       window.editorAPI?.insertText(
-        "```mermaid\ngraph LR\n  A[Start] --> B{Decision}\n  B -->|Yes| C[OK]\n  B -->|No| D[Cancel]\n```"
+        "```mermaid\ngraph LR\n  A[Start] --> B{Decision}\n  B -->|Yes| C[OK]\n  B -->|No| D[Cancel]\n```",
       ),
   },
   {
@@ -148,7 +148,7 @@ export const commands: CommandItem[] = [
     section: "Diagrams",
     apply: () =>
       window.editorAPI?.insertText(
-        "```mermaid\nsequenceDiagram\n  Alice->>John: Hello John, how are you?\n  John-->>Alice: Great!\n```"
+        "```mermaid\nsequenceDiagram\n  Alice->>John: Hello John, how are you?\n  John-->>Alice: Great!\n```",
       ),
   },
   {
@@ -157,7 +157,7 @@ export const commands: CommandItem[] = [
     section: "Diagrams",
     apply: () =>
       window.editorAPI?.insertText(
-        "```mermaid\nclassDiagram\n  Animal <|-- Duck\n  Animal : +int age\n  class Duck{\n    +swim()\n  }\n```"
+        "```mermaid\nclassDiagram\n  Animal <|-- Duck\n  Animal : +int age\n  class Duck{\n    +swim()\n  }\n```",
       ),
   },
   {
@@ -166,7 +166,7 @@ export const commands: CommandItem[] = [
     section: "Diagrams",
     apply: () =>
       window.editorAPI?.insertText(
-        "```mermaid\nmindmap\n  root((mindmap))\n    Origins\n    Research\n```"
+        "```mermaid\nmindmap\n  root((mindmap))\n    Origins\n    Research\n```",
       ),
   },
 
@@ -177,7 +177,7 @@ export const commands: CommandItem[] = [
     section: "Math",
     apply: () =>
       window.editorAPI?.insertText(
-        "$$ x = \\frac{-b \\pm \\sqrt{b^2 - 4ac}}{2a} $$"
+        "$$ x = \\frac{-b \\pm \\sqrt{b^2 - 4ac}}{2a} $$",
       ),
   },
   {
@@ -192,7 +192,7 @@ export const commands: CommandItem[] = [
     section: "Math",
     apply: () =>
       window.editorAPI?.insertText(
-        "$$ \\sum_{i=1}^{n} i = \\frac{n(n+1)}{2} $$"
+        "$$ \\sum_{i=1}^{n} i = \\frac{n(n+1)}{2} $$",
       ),
   },
   {
@@ -206,5 +206,63 @@ export const commands: CommandItem[] = [
     detail: "Complex Analysis",
     section: "Math",
     apply: () => window.editorAPI?.insertText("$$ e^{i\\pi} + 1 = 0 $$"),
+  },
+
+  // Insert
+  {
+    label: "Today's Date",
+    detail: "YYYY-MM-DD format",
+    section: "Insert",
+    apply: () => {
+      const today = new Date();
+      const yyyy = today.getFullYear();
+      const mm = String(today.getMonth() + 1).padStart(2, "0");
+      const dd = String(today.getDate()).padStart(2, "0");
+      window.editorAPI?.insertText(`${yyyy}-${mm}-${dd}`);
+    },
+  },
+  {
+    label: "Date (Long)",
+    detail: "Full date format",
+    section: "Insert",
+    apply: () => {
+      const today = new Date();
+      const formatted = today.toLocaleDateString(undefined, {
+        weekday: "long",
+        year: "numeric",
+        month: "long",
+        day: "numeric",
+      });
+      window.editorAPI?.insertText(formatted);
+    },
+  },
+  {
+    label: "Date and Time",
+    detail: "Current timestamp",
+    section: "Insert",
+    apply: () => {
+      const now = new Date();
+      const formatted = now.toLocaleString(undefined, {
+        year: "numeric",
+        month: "long",
+        day: "numeric",
+        hour: "2-digit",
+        minute: "2-digit",
+      });
+      window.editorAPI?.insertText(formatted);
+    },
+  },
+  {
+    label: "Time",
+    detail: "Current time only",
+    section: "Insert",
+    apply: () => {
+      const now = new Date();
+      const formatted = now.toLocaleTimeString(undefined, {
+        hour: "2-digit",
+        minute: "2-digit",
+      });
+      window.editorAPI?.insertText(formatted);
+    },
   },
 ];

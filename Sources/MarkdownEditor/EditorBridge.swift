@@ -389,6 +389,64 @@ public final class EditorBridge: NSObject {
         await executeCommand("insertHorizontalRule")
     }
     
+    /// Inserts the current date at the cursor position.
+    ///
+    /// - Parameter format: The date format to use. Defaults to "yyyy-MM-dd".
+    ///
+    /// ## Common Formats
+    /// - `"yyyy-MM-dd"` → 2026-02-06
+    /// - `"MMMM d, yyyy"` → February 6, 2026
+    /// - `"MMM d, yyyy"` → Feb 6, 2026
+    /// - `"EEEE, MMMM d, yyyy"` → Thursday, February 6, 2026
+    /// - `"MM/dd/yyyy"` → 02/06/2026
+    ///
+    /// - Note: Uses the user's current locale for formatting.
+    public func insertDate(format: String = "yyyy-MM-dd") async {
+        guard let webView, isReady else { return }
+        
+        let formatter = DateFormatter()
+        formatter.dateFormat = format
+        let dateString = formatter.string(from: Date())
+        
+        do {
+            let call = try JavaScriptUtilities.buildJavaScriptCall(
+                method: "window.editorAPI.insertText",
+                arguments: [.string(dateString)]
+            )
+            _ = try await webView.evaluateJavaScript(call)
+        } catch {
+            // Silently fail for convenience methods
+        }
+    }
+    
+    /// Inserts a timestamp at the cursor position.
+    ///
+    /// - Parameter includeTime: If true, includes the time. Defaults to false.
+    /// - Parameter locale: The locale to use. Defaults to current locale.
+    ///
+    /// ## Examples
+    /// - `includeTime: false` → February 6, 2026
+    /// - `includeTime: true` → February 6, 2026 at 11:10 PM
+    public func insertTimestamp(includeTime: Bool = false, locale: Locale = .current) async {
+        guard let webView, isReady else { return }
+        
+        let formatter = DateFormatter()
+        formatter.locale = locale
+        formatter.dateStyle = .long
+        formatter.timeStyle = includeTime ? .short : .none
+        let dateString = formatter.string(from: Date())
+        
+        do {
+            let call = try JavaScriptUtilities.buildJavaScriptCall(
+                method: "window.editorAPI.insertText",
+                arguments: [.string(dateString)]
+            )
+            _ = try await webView.evaluateJavaScript(call)
+        } catch {
+            // Silently fail for convenience methods
+        }
+    }
+    
     // MARK: - Editor State
     
     /// Focuses the editor.

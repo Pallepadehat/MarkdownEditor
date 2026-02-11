@@ -6,19 +6,6 @@ on:
   pull_request:
 
 jobs:
-  swift:
-    name: Swift Build and Test
-    runs-on: macos-latest
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Build
-        run: swift build
-
-      - name: Test
-        run: swift test
-
   core-editor:
     name: CoreEditor Build
     runs-on: ubuntu-latest

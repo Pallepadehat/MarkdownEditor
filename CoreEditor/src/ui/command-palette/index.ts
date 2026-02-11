@@ -132,19 +132,12 @@ export class CommandPalette {
       const el = createElement("div");
       el.className = "palette-item";
       if (index === this.selectedIndex) el.classList.add("selected");
-
-      const label = createElement("span");
-      label.className = "palette-label";
-      label.textContent = item.label;
-
-      const detail = createElement("span");
-      detail.className = "palette-detail";
-      detail.textContent = item.shortcut
-        ? `${item.detail} ${item.shortcut}`
-        : item.detail;
-
-      el.appendChild(label);
-      el.appendChild(detail);
+      el.innerHTML = `
+        <span class="palette-label">${item.label}</span>
+        <span class="palette-detail">${item.detail}${
+        item.shortcut ? " " + item.shortcut : ""
+      }</span>
+      `;
       el.onclick = () => this.selectItem(index);
       this.element.appendChild(el);
     });

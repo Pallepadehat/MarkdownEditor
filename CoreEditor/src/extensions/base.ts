@@ -64,6 +64,7 @@ export function createBaseExtensions(): Extension[] {
     rectangularSelection(),
     crosshairCursor(),
     highlightSelectionMatches(),
+    EditorView.lineWrapping,
     keymap.of([
       ...closeBracketsKeymap,
       ...defaultKeymap,

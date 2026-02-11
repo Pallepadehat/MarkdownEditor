@@ -300,7 +300,7 @@ Contributions are welcome. This project uses a hybrid Swift/TypeScript architect
 ### Code Style
 
 - **Swift**: Follow Swift API Design Guidelines
-- **TypeScript**: Follow the existing TypeScript style patterns used in `CoreEditor/src`
+- **TypeScript**: Use the existing ESLint and Prettier configuration in CoreEditor
 
 ## Bug Reports and Issues
 

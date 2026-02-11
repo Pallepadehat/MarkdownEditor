@@ -37,13 +37,7 @@ let commandPalette: CommandPalette | null = null;
 // Debounced content change notification
 const debouncedContentChange = debounce(
   (content: string) => notifyContentChanged(content),
-  100,
-  { useIdleCallback: true }
-);
-
-const debouncedSelectionChange = debounce(
-  (from: number, to: number) => notifySelectionChanged(from, to),
-  40
+  100
 );
 
 /**
@@ -108,7 +102,7 @@ export function initEditor(
         }
         if (update.selectionSet) {
           const { from, to } = update.state.selection.main;
-          debouncedSelectionChange(from, to);
+          notifySelectionChanged(from, to);
         }
         if (update.focusChanged) {
           notifyFocus(update.view.hasFocus);

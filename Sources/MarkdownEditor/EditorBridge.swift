@@ -315,20 +315,8 @@ public final class EditorBridge: NSObject {
     ///   - title: Optional link text. If nil, uses the selected text or "link text".
     public func insertLink(url: String, title: String? = nil) async {
         guard let webView, isReady else { return }
-        
-        do {
-            var arguments: [JavaScriptArgument] = [.string(url)]
-            if let title {
-                arguments.append(.string(title))
-            }
-            let call = try JavaScriptUtilities.buildJavaScriptCall(
-                method: "window.editorAPI.insertLink",
-                arguments: arguments
-            )
-            _ = try await webView.evaluateJavaScript(call)
-        } catch {
-            // Silently fail for convenience methods
-        }
+        let titleArg = title.map { ", \"\($0)\"" } ?? ""
+        _ = try? await webView.evaluateJavaScript("window.editorAPI.insertLink(\"\(url)\"\(titleArg))")
     }
     
     /// Inserts a Markdown image.
@@ -338,20 +326,8 @@ public final class EditorBridge: NSObject {
     ///   - alt: Optional alt text for the image.
     public func insertImage(url: String, alt: String? = nil) async {
         guard let webView, isReady else { return }
-        
-        do {
-            var arguments: [JavaScriptArgument] = [.string(url)]
-            if let alt {
-                arguments.append(.string(alt))
-            }
-            let call = try JavaScriptUtilities.buildJavaScriptCall(
-                method: "window.editorAPI.insertImage",
-                arguments: arguments
-            )
-            _ = try await webView.evaluateJavaScript(call)
-        } catch {
-            // Silently fail for convenience methods
-        }
+        let altArg = alt.map { ", \"\($0)\"" } ?? ""
+        _ = try? await webView.evaluateJavaScript("window.editorAPI.insertImage(\"\(url)\"\(altArg))")
     }
     
     /// Inserts a heading at the current line.
@@ -396,17 +372,8 @@ public final class EditorBridge: NSObject {
     /// - Parameter language: Optional language identifier for syntax highlighting.
     public func insertCodeBlock(language: String? = nil) async {
         guard let webView, isReady else { return }
-        
-        do {
-            let arguments: [JavaScriptArgument] = language.map { [.string($0)] } ?? []
-            let call = try JavaScriptUtilities.buildJavaScriptCall(
-                method: "window.editorAPI.insertCodeBlock",
-                arguments: arguments
-            )
-            _ = try await webView.evaluateJavaScript(call)
-        } catch {
-            // Silently fail for convenience methods
-        }
+        let langArg = language.map { "\"\($0)\"" } ?? ""
+        _ = try? await webView.evaluateJavaScript("window.editorAPI.insertCodeBlock(\(langArg))")
     }
     
     /// Inserts a list item at the current line.

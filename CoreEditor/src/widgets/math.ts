@@ -197,26 +197,66 @@ function isRangeSelected(
   return false;
 }
 
-const mathField = StateField.define<DecorationSet>({
+type SelectionRange = { from: number; to: number };
+type MathRange = { from: number; to: number };
+type MathFieldState = {
+  decorations: DecorationSet;
+  mathRanges: MathRange[];
+};
+
+function selectionOverlapsMathRanges(
+  selection: SelectionRange[],
+  mathRanges: MathRange[]
+): boolean {
+  for (const range of mathRanges) {
+    if (isRangeSelected(selection, range.from, range.to)) {
+      return true;
+    }
+  }
+  return false;
+}
+
+const mathField = StateField.define<MathFieldState>({
   create(state) {
     return buildMathDecorations(state);
   },
-  update(decorations, tr) {
-    if (tr.docChanged || tr.selection) {
+  update(value, tr) {
+    if (tr.docChanged) {
       return buildMathDecorations(tr.state);
     }
-    return decorations;
+
+    if (tr.selection) {
+      const previousSelection = tr.startState.selection.ranges.map((r) => ({
+        from: r.from,
+        to: r.to,
+      }));
+      const nextSelection = tr.state.selection.ranges.map((r) => ({
+        from: r.from,
+        to: r.to,
+      }));
+
+      // Rebuild only when the selection enters or leaves a math range.
+      if (
+        selectionOverlapsMathRanges(previousSelection, value.mathRanges) ||
+        selectionOverlapsMathRanges(nextSelection, value.mathRanges)
+      ) {
+        return buildMathDecorations(tr.state);
+      }
+    }
+
+    return value;
   },
-  provide: (f) => EditorView.decorations.from(f),
+  provide: (f) => EditorView.decorations.from(f, (value) => value.decorations),
 });
 
-function buildMathDecorations(state: EditorState): DecorationSet {
+function buildMathDecorations(state: EditorState): MathFieldState {
   const builder = new RangeSetBuilder<Decoration>();
   const text = state.doc.toString();
   const selectionRanges = state.selection.ranges.map((r) => ({
     from: r.from,
     to: r.to,
   }));
+  const mathRanges: MathRange[] = [];
 
   // Match block ($$...$$) and inline ($...$)
   const regex = /(\$\$[\s\S]*?\$\$)|(\$[^$\n]+?\$)/g;
@@ -263,6 +303,7 @@ function buildMathDecorations(state: EditorState): DecorationSet {
     }
 
     i = nextIndex - 1;
+    mathRanges.push({ from: current.from, to: endTo });
 
     if (isRangeSelected(selectionRanges, current.from, endTo)) {
       continue;
@@ -276,7 +317,10 @@ function buildMathDecorations(state: EditorState): DecorationSet {
     builder.add(current.from, endTo, widget);
   }
 
-  return builder.finish();
+  return {
+    decorations: builder.finish(),
+    mathRanges,
+  };
 }
 
 const mathStyles = EditorView.baseTheme({

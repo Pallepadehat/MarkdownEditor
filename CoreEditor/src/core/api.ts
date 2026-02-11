@@ -26,6 +26,7 @@ import {
   syntaxHidingCompartment,
   imageCompartment,
   mathCompartment,
+  getConfig,
   updateConfig,
 } from "./state";
 
@@ -226,11 +227,11 @@ export function createEditorAPI(
     updateConfiguration(config: EditorConfig): void {
       const view = getView();
       if (!view) return;
-
+      const previousConfig = getConfig();
       const currentConfig = updateConfig(config);
       const effects = [];
 
-      if (config.theme) {
+      if (config.theme && config.theme !== previousConfig.theme) {
         effects.push(
           themeCompartment.reconfigure(getThemeExtension(config.theme))
         );
@@ -239,7 +240,15 @@ export function createEditorAPI(
         setMathTheme(config.theme);
       }
 
-      if (config.fontSize || config.fontFamily || config.lineHeight) {
+      const shouldUpdateStyle =
+        (config.fontSize !== undefined &&
+          config.fontSize !== previousConfig.fontSize) ||
+        (config.fontFamily !== undefined &&
+          config.fontFamily !== previousConfig.fontFamily) ||
+        (config.lineHeight !== undefined &&
+          config.lineHeight !== previousConfig.lineHeight);
+
+      if (shouldUpdateStyle) {
         effects.push(
           styleCompartment.reconfigure(
             EditorView.theme({
@@ -255,7 +264,10 @@ export function createEditorAPI(
         );
       }
 
-      if (config.showLineNumbers !== undefined) {
+      if (
+        config.showLineNumbers !== undefined &&
+        config.showLineNumbers !== previousConfig.showLineNumbers
+      ) {
         effects.push(
           lineNumbersCompartment.reconfigure(
             config.showLineNumbers ? lineNumbers() : []
@@ -263,7 +275,10 @@ export function createEditorAPI(
         );
       }
 
-      if (config.wrapLines !== undefined) {
+      if (
+        config.wrapLines !== undefined &&
+        config.wrapLines !== previousConfig.wrapLines
+      ) {
         effects.push(
           lineWrappingCompartment.reconfigure(
             config.wrapLines ? EditorView.lineWrapping : []
@@ -271,7 +286,10 @@ export function createEditorAPI(
         );
       }
 
-      if (config.renderMermaid !== undefined) {
+      if (
+        config.renderMermaid !== undefined &&
+        config.renderMermaid !== previousConfig.renderMermaid
+      ) {
         effects.push(
           mermaidCompartment.reconfigure(
             config.renderMermaid ? createMermaidExtension() : []
@@ -279,7 +297,10 @@ export function createEditorAPI(
         );
       }
 
-      if (config.hideSyntax !== undefined) {
+      if (
+        config.hideSyntax !== undefined &&
+        config.hideSyntax !== previousConfig.hideSyntax
+      ) {
         effects.push(
           syntaxHidingCompartment.reconfigure(
             config.hideSyntax ? createSyntaxHidingExtension() : []
@@ -287,7 +308,10 @@ export function createEditorAPI(
         );
       }
 
-      if (config.renderImages !== undefined) {
+      if (
+        config.renderImages !== undefined &&
+        config.renderImages !== previousConfig.renderImages
+      ) {
         effects.push(
           imageCompartment.reconfigure(
             config.renderImages ? createImageExtension() : []
@@ -295,7 +319,10 @@ export function createEditorAPI(
         );
       }
 
-      if (config.renderMath !== undefined) {
+      if (
+        config.renderMath !== undefined &&
+        config.renderMath !== previousConfig.renderMath
+      ) {
         effects.push(
           mathCompartment.reconfigure(
             config.renderMath ? createMathExtension() : []

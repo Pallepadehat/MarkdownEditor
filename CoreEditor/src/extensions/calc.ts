@@ -5,7 +5,17 @@
  */
 
 import { CompletionContext, CompletionResult } from "@codemirror/autocomplete";
-import { evaluate } from "mathjs";
+
+type MathEvaluate = (expression: string) => unknown;
+
+let mathEvaluatePromise: Promise<MathEvaluate> | null = null;
+
+async function getMathEvaluate(): Promise<MathEvaluate> {
+  if (!mathEvaluatePromise) {
+    mathEvaluatePromise = import("mathjs").then((module) => module.evaluate);
+  }
+  return mathEvaluatePromise;
+}
 
 /**
  * Checks if cursor is inside a math block on the current line.
@@ -42,7 +52,7 @@ function isInsideMath(text: string, pos: number): boolean {
  */
 export function mathCompletion(
   context: CompletionContext
-): CompletionResult | null {
+): CompletionResult | Promise<CompletionResult | null> | null {
   const { state, pos } = context;
 
   const charBefore = state.sliceDoc(pos - 1, pos);
@@ -61,27 +71,27 @@ export function mathCompletion(
 
   if (!expression) return null;
 
-  try {
-    const result = evaluate(expression);
-    if (result === undefined || result === null) return null;
+  return getMathEvaluate()
+    .then((evaluate) => {
+      const result = evaluate(expression);
+      if (result === undefined || result === null) return null;
 
-    let displayResult = result.toString();
-    if (typeof result === "number" && !Number.isInteger(result)) {
-      displayResult = parseFloat(result.toFixed(4)).toString();
-    }
+      let displayResult = result.toString();
+      if (typeof result === "number" && !Number.isInteger(result)) {
+        displayResult = parseFloat(result.toFixed(4)).toString();
+      }
 
-    return {
-      from: pos,
-      options: [
-        {
-          label: displayResult,
-          type: "constant",
-          detail: ` = ${expression}`,
-          apply: ` ${displayResult}`,
-        },
-      ],
-    };
-  } catch {
-    return null;
-  }
+      return {
+        from: pos,
+        options: [
+          {
+            label: displayResult,
+            type: "constant",
+            detail: ` = ${expression}`,
+            apply: ` ${displayResult}`,
+          },
+        ],
+      };
+    })
+    .catch(() => null);
 }
